@@ -1,0 +1,40 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Brown}{Brown}{2022}]{brown2022techreport}
+Brown, E. (2022).
+\newblock A technical report on novel proofs for {X}.
+\newblock Technical Report TR-2022-09, Hypothetical Research Institute, Eureka.
+
+\bibitem[\protect\citeauthoryear{Doe}{Doe}{2024}]{doe2024proof}
+Doe, J. (2024).
+\newblock {\em The Comprehensive Guide to Proving {X}\/} (2nd ed.), Volume~3.
+\newblock Springfield: Fictional Academic Press.
+
+
+\bibitem[\protect\citeauthoryear{Lee and Green}{Lee and
+  Green}{2023}]{lee2023journal}
+Lee, M. and S.~Green (2023, July).
+\newblock A comprehensive study on the validity of {X}.
+\newblock {\em Journal of Hypothetical Studies\/}~{\em 15\/}(4), 123--145.
+
+
+\bibitem[\protect\citeauthoryear{Smith and Johnson}{Smith and
+  Johnson}{2023}]{smith2023conference}
+Smith, J. and A.~Johnson (2023).
+\newblock Proof techniques for {X}.
+\newblock In {\em Proceedings of the International Symposium on Incorrect
+  Proofs}, Atlantis, pp.\  45--58. Symposium Publications.
+
+\bibitem[\protect\citeauthoryear{Zobel}{Zobel}{2004}]{zobel2004}
+Zobel, J. (2004).
+\newblock {\em Writing for Computer Science\/} (2nd ed.).
+\newblock Springer London.
+
+
+\bibitem[\protect\citeauthoryear{Zobel}{Zobel}{2014}]{zobel2014}
+Zobel, J. (2014).
+\newblock {\em Writing for Computer Science\/} (3rd ed.).
+\newblock Springer London.
+
+
+\end{thebibliography}
