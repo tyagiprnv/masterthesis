@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="22aa7b32-de62-4bfc-a297-7f877f385093" name="dws">
+        <fileTransfer accessType="SFTP" host="dws-student-01.informatik.uni-mannheim.de" port="22" sshConfigId="5dddbdf4-59e3-4e60-a21e-0067ae1bdf30" sshConfig="ptyagi@dws-student-01.informatik.uni-mannheim.de:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
