@@ -13,15 +13,37 @@ models = [
     "MoritzLaurer/deberta-v3-large-zeroshot-v2.0" 
 ]
 
-def predict_with_model(classification_type, model_name, texts):
+def predict_with_model(classification_type, model_name, texts, device):
     print(f"Using model: {model_name}")
-    model_pipeline = pipeline(classification_type, model=model_name)
-    predictions = model_pipeline(texts)
+    model_pipeline = pipeline(classification_type, model=model_name, device=device)
+    if classification_type == "text-classification":
+        predictions = model_pipeline(texts, batch_size=32)
+    else:
+        predictions = []
+        for text in data_generator(texts):
+            result = model_pipeline(
+            text,
+            candidate_labels = ["anger", "disgust", "fear", "joy", "sadness", "surprise"])
+            predictions.append(result)
+
     return predictions
 
-def model_worker(model_name, texts, device):
+def data_generator(texts):
+    for value in texts:
+        yield value
+
+
+def model_worker(classification_type, model_name, texts, device, output_file):
     torch.cuda.set_device(device)
-    return predict_with_model(model_name, texts)
+    print(f"device: {device}")
+    predictions = predict_with_model(classification_type, model_name, texts, device)
+
+    if classification_type == "text-classification":
+        pd.DataFrame(predictions).to_csv(f'/work/ptyagi/masterthesis/data/predictions/{output_file}', index=False)
+    else:
+        first_labels_scores = [{'label': item['labels'][0], 'score': item['scores'][0]} for item in predictions]
+        pd.DataFrame(first_labels_scores).to_csv(f'/work/ptyagi/masterthesis/data/predictions/{output_file}', index=False)
+
 
 def main(available_devices, csv_file, txt_col ): 
 
@@ -34,16 +56,21 @@ def main(available_devices, csv_file, txt_col ):
 
     for i in range(num_models):
         model_name = models[i]
-        device = available_devices[i % len(available_devices)] 
+        if model_name in ("cardiffnlp/twitter-roberta-large-emotion-latest", "cardiffnlp/twitter-roberta-base-emotion-latest"):
+            classification_type = "text-classification"
+        else:
+            classification_type = "zero-shot-classification"
 
-        p = multiprocessing.Process(target=model_worker, args=(model_name, texts, device))
+        device = available_devices[i % len(available_devices)] 
+        output_file = f"predictions_{model_name.replace('/', '_')}.csv"
+        p = multiprocessing.Process(target=model_worker, args=(classification_type, model_name, texts, device, output_file))
         processes.append(p)
         p.start()
+        print(f'process {p.pid} started')
 
     for p in processes:
         p.join()
-
-    print("All model predictions completed.")
+        print(f'process {p.pid} finished')
 
 if __name__ == "__main__":
 
