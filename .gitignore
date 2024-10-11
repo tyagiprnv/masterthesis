@@ -10,3 +10,6 @@
 /ZeppelinRemoteNotebooks/
 
 .idea/
+
+zero-shot-classification-boost-with-self-training/datasets
+zero-shot-classification-boost-with-self-training/__pycache__

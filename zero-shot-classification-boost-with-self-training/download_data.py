@@ -12,8 +12,8 @@ import tarfile
 import zipfile
 
 import pandas as pd
-from sklearn.datasets import fetch_20newsgroups
-from sklearn.model_selection import train_test_split
+from sklearn.datasets import fetch_20newsgroups # type: ignore
+from sklearn.model_selection import train_test_split # type: ignore
 
 from class_names import DATASET_TO_CLASS_NAME_MAPPING
 
@@ -168,8 +168,8 @@ if __name__ == '__main__':
         {
             'isear': 'https://raw.githubusercontent.com/sinmaniphel/py_isear_dataset/master/isear.csv',
             'ag_news': 'https://docs.google.com/uc?export=download&id=0Bz8a_Dbh9QhbUDNpeUdjb0wxRms',
-            'dbpedia': 'https://docs.google.com/uc?export=download&id=0Bz8a_Dbh9QhbQ2Vic1kxMmZZQ1k&confirm=t',
-            'yahoo_answers': 'https://docs.google.com/uc?export=download&id=0Bz8a_Dbh9Qhbd2JNdDBsQUdocVU&confirm=t',
+            # 'dbpedia': 'https://docs.google.com/uc?export=download&id=0Bz8a_Dbh9QhbQ2Vic1kxMmZZQ1k&confirm=t',
+            # 'yahoo_answers': 'https://docs.google.com/uc?export=download&id=0Bz8a_Dbh9Qhbd2JNdDBsQUdocVU&confirm=t',
             'imdb': 'https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz'
         }
 
@@ -191,6 +191,6 @@ if __name__ == '__main__':
                 zip_ref.extractall(out_dir)
 
     load_20_newsgroup()
-    load_ag_news_dbpedia_yahoo()
+    # load_ag_news_dbpedia_yahoo()
     load_isear()
     load_imdb()
