@@ -12,7 +12,7 @@ import torch
 from datasets import Dataset
 from tqdm.auto import tqdm
 from transformers import (AutoModelForSequenceClassification, AutoTokenizer, PretrainedConfig, PreTrainedTokenizerBase,
-                          InputFeatures, Trainer, TrainingArguments, RobertaConfig, BartConfig, DebertaConfig, pipeline)
+                          InputFeatures, Trainer, TrainingArguments, RobertaConfig, BartConfig, DebertaConfig, DebertaV2Config, pipeline)
 from transformers.pipelines.pt_utils import KeyDataset
 
 
@@ -73,7 +73,7 @@ def finetune_entailment_model(model_name, self_training_set: SelfTrainingSet, se
 def preprocess_and_tokenize(model_config: PretrainedConfig, tokenizer: PreTrainedTokenizerBase,
                             self_training_set: SelfTrainingSet, seed: int, hypothesis_template: str):
 
-    if type(model_config) not in [RobertaConfig, DebertaConfig, BartConfig]:
+    if type(model_config) not in [RobertaConfig, DebertaConfig, BartConfig, DebertaV2Config]:
         raise NotImplementedError(f"{model_config.architectures} model is not supported")
 
     def get_numeric_label(label: str, model_config: PretrainedConfig):
@@ -100,7 +100,7 @@ def preprocess_and_tokenize(model_config: PretrainedConfig, tokenizer: PreTraine
         inputs = (tokenizer.encode_plus([text, hypothesis], add_special_tokens=True, padding='max_length',
                                         truncation='only_first'))
 
-        if type(model_config) == DebertaConfig:
+        if type(model_config) in (DebertaConfig, DebertaV2Config):
             tokenized.append(InputFeatures(input_ids=inputs['input_ids'],
                                            attention_mask=inputs['attention_mask'],
                                            token_type_ids=inputs['token_type_ids'],
