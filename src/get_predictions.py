@@ -1,16 +1,13 @@
-import pandas as pd
-import torch
-from transformers import pipeline
+import pandas as pd # type: ignore
+import torch # type: ignore
+from transformers import pipeline # type: ignore
 import multiprocessing
 import sys
 
 
 models = [
     "cardiffnlp/twitter-roberta-base-emotion-latest",  
-    "cardiffnlp/twitter-roberta-large-emotion-latest",  
-    "facebook/bart-large-mnli", 
-    "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7", 
-    "MoritzLaurer/deberta-v3-large-zeroshot-v2.0" 
+    "cardiffnlp/twitter-roberta-large-emotion-latest"  
 ]
 
 def predict_with_model(classification_type, model_name, texts, device):
@@ -66,6 +63,7 @@ def main(available_devices, csv_file, txt_col ):
         p = multiprocessing.Process(target=model_worker, args=(classification_type, model_name, texts, device, output_file))
         processes.append(p)
         p.start()
+        print(classification_type)
         print(f'process {p.pid} started')
 
     for p in processes:

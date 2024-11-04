@@ -15,3 +15,10 @@ zero-shot-classification-boost-with-self-training/datasets
 zero-shot-classification-boost-with-self-training/__pycache__
 zero-shot-classification-boost-with-self-training/output
 zero-shot-classification-boost-with-self-training/output.log
+zero-shot-classification-boost-with-self-training/get_pred.ipynb
+
+models
+output.log
+config.json
+src/notebooks/tmp.ipynb
+data/predictions

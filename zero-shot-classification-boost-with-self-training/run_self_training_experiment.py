@@ -169,7 +169,7 @@ if __name__ == '__main__':
         for class_name, idxs in class_name_to_negative_chosen_idxs.items():
             self_training_set.texts.extend([unlabeled_texts[idx] for idx in idxs])
             self_training_set.class_names.extend([class_name]*len(idxs))
-            self_training_set.entailment_labels.extend(['CONTRADICTION']*len(idxs))
+            self_training_set.entailment_labels.extend(['NOT_ENTAILMENT']*len(idxs))
 
         logging.info(f"Done collecting pseudo-labeled elements for self-training iteration {iter_number}: "
                      f"{Counter(self_training_set.entailment_labels)}")
