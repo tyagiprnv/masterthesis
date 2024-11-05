@@ -59,7 +59,7 @@ def main(available_devices, csv_file, txt_col ):
             classification_type = "zero-shot-classification"
 
         device = available_devices[i % len(available_devices)] 
-        output_file = f"predictions_{model_name.replace('/', '_')}.csv"
+        output_file = f"predictions_{txt_col}_{model_name.replace('/', '_')}.csv"
         p = multiprocessing.Process(target=model_worker, args=(classification_type, model_name, texts, device, output_file))
         processes.append(p)
         p.start()
