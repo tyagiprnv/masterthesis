@@ -11,6 +11,8 @@ import pandas as pd
 import os
 from tqdm import tqdm
 import argparse
+from torch.utils.tensorboard import SummaryWriter
+
 
 class TextDataset(Dataset):
     def __init__(self, texts, labels, confidences, tokenizer, max_len, label_encoder):
@@ -93,7 +95,7 @@ def main(config_path, mode, apply_preprocessing, save_folder):
     numerical_labels = label_encoder.transform(labels)
     class_weights = compute_class_weight('balanced', classes=np.unique(numerical_labels), y=numerical_labels)
     class_weights = torch.tensor(class_weights, dtype=torch.float)
-    
+
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     model = BertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=len(label_encoder.classes_))
 
@@ -111,6 +113,30 @@ def main(config_path, mode, apply_preprocessing, save_folder):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     loss_fn = ConfidenceWeightedLoss(class_weights.to(device), apply_preprocessing)
+
+    writer = SummaryWriter(log_dir=os.path.join(save_folder, "logs"))  # Initialize TensorBoard writer
+
+    def evaluate(model, data_loader, dataset_size, mode="Validation"):
+        model.eval()
+        correct_predictions = 0
+
+        with torch.no_grad():
+            for batch in tqdm(data_loader, desc=f"Evaluating on {mode} data"):
+                input_ids = batch['input_ids'].to(device)
+                attention_mask = batch['attention_mask'].to(device)
+                labels = batch['labels'].to(device)
+
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+                logits = outputs.logits
+
+                preds = torch.argmax(logits, dim=1)
+                correct_predictions += (preds == labels).sum().item()
+
+        accuracy = correct_predictions / dataset_size
+        print(f"{mode} Accuracy: {accuracy:.4f}")
+        writer.add_scalar(f"Accuracy/{mode}", accuracy)  # Log accuracy to TensorBoard
+
+        return accuracy
 
     if mode == 'train':
         optimizer = AdamW(model.parameters(), lr=config['learning_rate'])
@@ -139,52 +165,38 @@ def main(config_path, mode, apply_preprocessing, save_folder):
             avg_train_loss = total_train_loss / len(train_loader)
             print(f"Epoch {epoch + 1}, Training Loss: {avg_train_loss:.4f}")
 
-            model.eval()
-            total_val_loss = 0
-            correct_predictions = 0
+            # Logging training loss
+            writer.add_scalar("Loss/Train", avg_train_loss, epoch + 1)
 
-            with torch.no_grad():
-                for batch in tqdm(val_loader, desc=f"Evaluating Epoch {epoch + 1}"):
-                    input_ids = batch['input_ids'].to(device)
-                    attention_mask = batch['attention_mask'].to(device)
-                    labels = batch['labels'].to(device)
-                    confidences = batch['confidences'].to(device) if 'confidences' in batch else None
+            # Validation Phase
+            avg_val_loss = evaluate(model, val_loader, len(val_dataset), mode="Validation")
 
-                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-                    logits = outputs.logits
-
-                    loss = loss_fn(logits, labels, confidences)
-                    total_val_loss += loss.item()
-
-                    preds = torch.argmax(logits, dim=1)
-                    correct_predictions += (preds == labels).sum().item()
-
-            avg_val_loss = total_val_loss / len(val_loader)
-            accuracy = correct_predictions / len(val_dataset)
-            print(f"Epoch {epoch + 1}, Validation Loss: {avg_val_loss:.4f}, Accuracy: {accuracy:.4f}")
-
+        # Save the model and tokenizer after training
         os.makedirs(save_folder, exist_ok=True)
         model.save_pretrained(save_folder)
         tokenizer.save_pretrained(save_folder)
     
+        # Evaluate on the test dataset after training
+        print("Evaluating on Test data after training...")
+        evaluate(model, test_loader, len(test_dataset), mode="Test")
+
+        writer.close()  # Close the TensorBoard writer
+
     elif mode == 'test':
-        model.eval()
-        correct_predictions = 0
-
-        with torch.no_grad():
-            for batch in tqdm(test_loader, desc="Testing"):
-                input_ids = batch['input_ids'].to(device)
-                attention_mask = batch['attention_mask'].to(device)
-                labels = batch['labels'].to(device)
-
-                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-                logits = outputs.logits
-
-                preds = torch.argmax(logits, dim=1)
-                correct_predictions += (preds == labels).sum().item()
-
-        test_accuracy = correct_predictions / len(test_dataset)
-        print(f"Test Accuracy: {test_accuracy:.4f}")
+        # Load model and tokenizer
+        try:
+            model = BertForSequenceClassification.from_pretrained(save_folder)
+            tokenizer = BertTokenizer.from_pretrained(save_folder)
+            model = model.to(device)
+            print("Model and tokenizer loaded successfully.")
+        except Exception as e:
+            print(f"Error loading model or tokenizer from {save_folder}: {e}")
+            return
+        
+        # Evaluate on the test dataset
+        print("Evaluating on Test data in Test mode...")
+        evaluate(model, test_loader, len(test_dataset), mode="Test")
+        writer.close()
 
 if __name__ == "__main__":
     BASE_PATH = '/work/ptyagi/masterthesis/models/'  
