@@ -21,4 +21,6 @@ models
 output.log
 config.json
 src/notebooks/tmp.ipynb
+src/notebooks/bert_baseline_predictions_test.csv
+src/notebooks/bert_predictions_test.csv
 data/predictions
