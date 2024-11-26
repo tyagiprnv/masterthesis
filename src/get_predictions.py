@@ -12,7 +12,7 @@ models = [
 
 def predict_with_model(classification_type, model_name, texts, device):
     print(f"Using model: {model_name}")
-    model_pipeline = pipeline(classification_type, model=model_name, device=device)
+    model_pipeline = pipeline(classification_type, model=model_name, device=device, top_k=None)
     if classification_type == "text-classification":
         predictions = model_pipeline(texts, batch_size=32)
     else:
@@ -30,20 +30,25 @@ def data_generator(texts):
         yield value
 
 
-def model_worker(classification_type, model_name, texts, device, output_file):
+def model_worker(classification_type, model_name, texts, device, output_file, input_data, txt_col):
     torch.cuda.set_device(device)
     print(f"device: {device}")
     predictions = predict_with_model(classification_type, model_name, texts, device)
 
     if classification_type == "text-classification":
-        pd.DataFrame(predictions).to_csv(f'/work/ptyagi/masterthesis/data/predictions/{output_file}', index=False)
+        input_data[f"{model_name}_predictions"] = [
+            [(label_score['label'], label_score['score']) for label_score in prediction]
+            for prediction in predictions
+        ]
     else:
-        first_labels_scores = [{'label': item['labels'][0], 'score': item['scores'][0]} for item in predictions]
-        pd.DataFrame(first_labels_scores).to_csv(f'/work/ptyagi/masterthesis/data/predictions/{output_file}', index=False)
+        input_data[f"{model_name}_predictions"] = [
+            [(prediction['labels'][i], prediction['scores'][i]) for i in range(len(prediction['labels']))]
+            for prediction in predictions
+        ]
+    input_data.to_csv(f'/work/ptyagi/masterthesis/data/predictions/{output_file}', index=False)
 
 
-def main(available_devices, csv_file, txt_col ): 
-
+def main(available_devices, csv_file, txt_col): 
     data = pd.read_csv(csv_file)
 
     texts = data[txt_col].tolist()  
@@ -59,8 +64,8 @@ def main(available_devices, csv_file, txt_col ):
             classification_type = "zero-shot-classification"
 
         device = available_devices[i % len(available_devices)] 
-        output_file = f"predictions_{txt_col}_{model_name.replace('/', '_')}.csv"
-        p = multiprocessing.Process(target=model_worker, args=(classification_type, model_name, texts, device, output_file))
+        output_file = f"predictions_{txt_col}_{model_name.replace('/', '_')}_merged.csv"
+        p = multiprocessing.Process(target=model_worker, args=(classification_type, model_name, texts, device, output_file, data.copy(), txt_col))
         processes.append(p)
         p.start()
         print(classification_type)
@@ -71,7 +76,6 @@ def main(available_devices, csv_file, txt_col ):
         print(f'process {p.pid} finished')
 
 if __name__ == "__main__":
-
     if len(sys.argv) < 4:
         print("Usage: python script.py <file_path> <text_column> <device1> <device2> ...")
         sys.exit(1)
