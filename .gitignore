@@ -23,3 +23,4 @@ config.json
 src/notebooks/bert_baseline_predictions_test.csv
 src/notebooks/bert_predictions_test.csv
 data/predictions
+data/test/images
