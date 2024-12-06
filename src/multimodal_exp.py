@@ -205,7 +205,7 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -307,7 +307,7 @@ def train_and_evaluate(config, seed=42):
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_february/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
     initial_weights = save_initial_weights(model)
@@ -340,8 +340,8 @@ def train_and_evaluate(config, seed=42):
 def main():
     configs = [
         {"learning_rate": 1e-5, "epochs": 2, "log_name": "exp_roberta_large_lr1e-5_epochs2_frozen_roberta", "freeze_clip": False, "freeze_roberta": True,
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/averaged_predictions.csv", 
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/02_February", 
+        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv", 
+        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August", 
         "label_col": "averaged_predictions", "text_col": "tweet_text", "image_col": "matched_filename"},
     ]
 
