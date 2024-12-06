@@ -45,7 +45,7 @@ def model_worker(classification_type, model_name, texts, device, output_file, in
             [(prediction['labels'][i], prediction['scores'][i]) for i in range(len(prediction['labels']))]
             for prediction in predictions
         ]
-    input_data.to_csv(f'/work/ptyagi/masterthesis/data/predictions/{output_file}', index=False)
+    input_data.to_csv(f'/work/ptyagi/masterthesis/data/predictions/aug/{output_file}', index=False)
 
 
 def main(available_devices, csv_file, txt_col): 
