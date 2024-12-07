@@ -304,7 +304,7 @@ def train_and_evaluate(config, seed=42):
 
     criterion = nn.KLDivLoss(reduction="batchmean")
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
@@ -312,7 +312,7 @@ def train_and_evaluate(config, seed=42):
 
     initial_weights = save_initial_weights(model)
 
-    writer = SummaryWriter(log_dir=f"runs/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
@@ -338,12 +338,47 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    configs = [
-        {"learning_rate": 1e-5, "epochs": 2, "log_name": "exp_roberta_large_lr1e-5_epochs2_frozen_roberta", "freeze_clip": False, "freeze_roberta": True,
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv", 
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August", 
-        "label_col": "averaged_predictions", "text_col": "tweet_text", "image_col": "matched_filename"},
-    ]
+    epochs_list = [2, 5]
+    freeze_clip_options = [True, False]
+    freeze_roberta_options = [True, False]
+    log_name_base = "exp_roberta_large_lr1e-5"
+
+    common_params = {
+        "learning_rate": 1e-5,
+        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
+        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
+        "label_col": "averaged_predictions",
+        "text_col": "tweet_text",
+        "image_col": "matched_filename"
+    }
+
+    skip_experiment = "exp_roberta_large_lr1e-5_epochs2"
+
+    configs = []
+    for epochs in epochs_list:
+        for freeze_clip in freeze_clip_options:
+            for freeze_roberta in freeze_roberta_options:
+                if freeze_clip and freeze_roberta:
+                    continue
+
+                log_name = f"{log_name_base}_epochs{epochs}"
+                if freeze_clip:
+                    log_name += "_frozen_clip"
+                if freeze_roberta:
+                    log_name += "_frozen_roberta"
+
+                if log_name == skip_experiment:
+                    print(f"Skipping experiment: {log_name}")
+                    continue
+
+                config = {
+                    "epochs": epochs,
+                    "freeze_clip": freeze_clip,
+                    "freeze_roberta": freeze_roberta,
+                    "log_name": log_name,
+                    **common_params
+                }
+                configs.append(config)
 
     seed = 42 
 
