@@ -23,7 +23,7 @@ class MultiModalClassifier(nn.Module):
         super(MultiModalClassifier, self).__init__()
         
         self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
-        self.text_model = AutoModel.from_pretrained("cardiffnlp/twitter-roberta-large-emotion-latest")
+        self.text_model = AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-emotion-latest")
 
         clip_feature_dim = self.clip_model.config.projection_dim  
         text_feature_dim = self.text_model.config.hidden_size
@@ -253,9 +253,10 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
 def train_and_evaluate(config, seed=42):
     set_seed(seed)
+    print(config['log_name'])
 
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
-    roberta_tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-large-emotion-latest")
+    roberta_tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-emotion-latest")
     
     data = pd.read_csv(config["csv_path"])
     train_data, temp_data = train_test_split(data, test_size=0.3, random_state=seed)
@@ -341,7 +342,7 @@ def main():
     epochs_list = [2, 5]
     freeze_clip_options = [True, False]
     freeze_roberta_options = [True, False]
-    log_name_base = "exp_roberta_large_lr1e-5"
+    log_name_base = "exp_roberta_base_lr1e-5"
 
     common_params = {
         "learning_rate": 1e-5,
@@ -351,8 +352,6 @@ def main():
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
-
-    skip_experiment = "exp_roberta_large_lr1e-5_epochs2"
 
     configs = []
     for epochs in epochs_list:
@@ -366,10 +365,6 @@ def main():
                     log_name += "_frozen_clip"
                 if freeze_roberta:
                     log_name += "_frozen_roberta"
-
-                if log_name == skip_experiment:
-                    print(f"Skipping experiment: {log_name}")
-                    continue
 
                 config = {
                     "epochs": epochs,
