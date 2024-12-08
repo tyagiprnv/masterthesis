@@ -24,3 +24,6 @@ src/notebooks/bert_baseline_predictions_test.csv
 src/notebooks/bert_predictions_test.csv
 data/predictions
 data/test/images
+experiments_1.log
+experiments_2.log
+experiments_indiv.log
