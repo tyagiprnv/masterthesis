@@ -272,17 +272,16 @@ def main():
     }
 
     configs = []
+    seed = 2
     for epochs in epochs_list:
-        log_name = f"{log_name_base}_epochs{epochs}"
+        log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
 
         config = {
             "epochs": epochs,
             "log_name": log_name,
             **common_params
             }
-        configs.append(config)
-
-    seed = 42 
+        configs.append(config) 
 
     for config in configs:
         train_and_evaluate(config, seed=seed)
