@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
@@ -103,7 +104,7 @@ def plot_and_save_label_wise_heatmap(predictions, labels, label_order, save_path
     plt.close()
 
 
-def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=False):
+def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=False, writer=None):
     model.eval()
     total_kl_div = 0.0
     total_cosine_sim = 0.0
@@ -137,8 +138,23 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
         predictions_tensor = torch.cat(all_predictions, dim=0)
         labels_tensor = torch.cat(all_labels, dim=0)
 
+        pred_labels = predictions_tensor.argmax(dim=-1).cpu().numpy()
+        true_labels = labels_tensor.argmax(dim=-1).cpu().numpy()
+
+        accuracy = accuracy_score(true_labels, pred_labels)
+        precision = precision_score(true_labels, pred_labels, average='weighted', zero_division=0)
+        recall = recall_score(true_labels, pred_labels, average='weighted', zero_division=0)
+
         plot_and_save_cosine_similarity(predictions_tensor, labels_tensor, f"{experiment_dir}/cosine_similarity.png")
         plot_and_save_label_wise_heatmap(predictions_tensor, labels_tensor, range(predictions_tensor.size(1)), f"{experiment_dir}/label_heatmap.png")
+    
+    if writer:
+        writer.add_scalar("Test/KL_Div", avg_kl_div)
+        writer.add_scalar("Test/Cosine_Sim", avg_cosine_sim)
+        writer.add_scalar("Test/MSE", avg_mse)
+        writer.add_scalar("Test/Accuracy", accuracy)
+        writer.add_scalar("Test/Precision", precision)
+        writer.add_scalar("Test/Recall", recall)
 
     return avg_kl_div, avg_cosine_sim, avg_mse
 
@@ -146,7 +162,7 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/february_exp/{log_name}")
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -208,7 +224,7 @@ def train_and_evaluate(config, seed=42):
         clip_processor=clip_processor
     )
 
-    val_dataset = train_dataset = EmotionDataset(
+    val_dataset = EmotionDataset(
         data=val_data,
         label_col=config["label_col"],
         image_col=config["image_col"],
@@ -216,7 +232,7 @@ def train_and_evaluate(config, seed=42):
         clip_processor=clip_processor
     )
 
-    test_dataset = train_dataset = EmotionDataset(
+    test_dataset = EmotionDataset(
         data=test_data,
         label_col=config["label_col"],
         image_col=config["image_col"],
@@ -235,10 +251,10 @@ def train_and_evaluate(config, seed=42):
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_february/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/february_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
@@ -248,12 +264,8 @@ def train_and_evaluate(config, seed=42):
         device, save_path=f"{experiment_dir}/best_model.pt", log_name=config["log_name"]
     )
 
-    test_kl_div, test_cosine_sim, test_mse = evaluate_model(model, test_loader, device, experiment_dir=experiment_dir, save_plots=True)
+    test_kl_div, test_cosine_sim, test_mse = evaluate_model(model, test_loader, device, experiment_dir=experiment_dir, save_plots=True, writer=writer)
     print(f"Test Metrics - KL Div: {test_kl_div:.4f}, Cosine Sim: {test_cosine_sim:.4f}, MSE: {test_mse:.4f}")
-
-    writer.add_scalar("Test/KL_Div", test_kl_div)
-    writer.add_scalar("Test/Cosine_Sim", test_cosine_sim)
-    writer.add_scalar("Test/MSE", test_mse)
 
     writer.close()
 
@@ -264,15 +276,15 @@ def main():
 
     common_params = {
         "learning_rate": 1e-5,
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
+        "csv_path": "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv",
+        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/02_February",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
 
     configs = []
-    seed = 2
+    seed = 42
     for epochs in epochs_list:
         log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
 
