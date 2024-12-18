@@ -28,6 +28,10 @@ class RobertaWithMLP(nn.Module):
             nn.Dropout(0.3),
             nn.Linear(hidden_size, num_classes)
         )
+    
+    def freeze_roberta(self):
+        for param in self.roberta.parameters():
+            param.requires_grad = False
 
     def forward(self, input_ids, attention_mask):
         outputs = self.roberta(input_ids=input_ids, attention_mask=attention_mask)
@@ -148,7 +152,7 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/february_exp/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -224,21 +228,24 @@ def train_and_evaluate(config, seed=42):
         roberta_tokenizer=roberta_tokenizer
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
     model = RobertaWithMLP()
+    
+    if config.get("freeze_roberta", False):
+        model.freeze_roberta()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_february/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
-    writer = SummaryWriter(log_dir=f"runs/february_exp/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
@@ -259,13 +266,13 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    epochs_list = [2, 5]
+    epochs_list = [10]
     log_name_base = "exp_only_roberta_large_lr1e-5"
 
     common_params = {
         "learning_rate": 1e-5,
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv",
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/02_February",
+        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
+        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
@@ -273,11 +280,12 @@ def main():
 
     configs = []
     for epochs in epochs_list:
-        log_name = f"{log_name_base}_epochs{epochs}"
+        log_name = f"{log_name_base}_epochs{epochs}_frozen"
 
         config = {
             "epochs": epochs,
             "log_name": log_name,
+            "freeze_roberta": True,
             **common_params
             }
         configs.append(config)
