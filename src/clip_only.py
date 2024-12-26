@@ -20,13 +20,13 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class ClipWithMLP(nn.Module):
-    def __init__(self, model_name="openai/clip-vit-large-patch14", num_classes=6, hidden_size=512):
+    def __init__(self, dropout, model_name="openai/clip-vit-large-patch14", num_classes=6, hidden_size=512):
         super(ClipWithMLP, self).__init__()
         self.clip_model = CLIPModel.from_pretrained(model_name)
         self.mlp = nn.Sequential(
             nn.Linear(self.clip_model.config.projection_dim, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(dropout),
             nn.Linear(hidden_size, num_classes)
         )
         
@@ -247,14 +247,14 @@ def train_and_evaluate(config, seed=42):
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
-    model = ClipWithMLP()
+    model = ClipWithMLP(config['dropout'])
     
     if config.get("freeze_clip", False):
         model.freeze_clip()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
+    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
@@ -277,30 +277,38 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    epochs_list = [10]
-    log_name_base = "exp_only_clip_lr1e-5"
+    epochs_list = [2, 5, 10]
+    freeze_clip_options = [True, False]
+    lr = 5e-6
+    dropout = 0.3
 
     common_params = {
-        "learning_rate": 1e-5,
+        "learning_rate": lr,
+        "dropout": dropout,
         "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
         "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
+    
+    log_name_base = f"exp_adamw_only_clip_lr{lr}_drop{dropout}"
 
     configs = []
     seed = 42
     for epochs in epochs_list:
-        log_name = f"{log_name_base}_epochs{epochs}_seed{seed}_frozen"
+        for freeze_clip in freeze_clip_options:  
+            log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
+            if freeze_clip:
+                log_name += "_frozen"
 
-        config = {
-            "epochs": epochs,
-            "log_name": log_name,
-            "freeze_clip" : True,
-            **common_params
-            }
-        configs.append(config) 
+            config = {
+                "epochs": epochs,
+                "log_name": log_name,
+                "freeze_clip" : freeze_clip,
+                **common_params
+                }
+            configs.append(config) 
 
     for config in configs:
         train_and_evaluate(config, seed=seed)

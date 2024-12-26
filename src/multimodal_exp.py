@@ -19,11 +19,11 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class MultiModalClassifier(nn.Module):
-    def __init__(self, num_labels, hidden_dim=512):
+    def __init__(self, num_labels, txt_model, dropout_size, hidden_dim=512):
         super(MultiModalClassifier, self).__init__()
         
         self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
-        self.text_model = AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-emotion-latest")
+        self.text_model = AutoModel.from_pretrained(txt_model)
 
         clip_feature_dim = self.clip_model.config.projection_dim  
         text_feature_dim = self.text_model.config.hidden_size
@@ -32,7 +32,7 @@ class MultiModalClassifier(nn.Module):
         self.mlp = nn.Sequential(
             nn.Linear(combined_dim, hidden_dim),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
         )
 
@@ -256,7 +256,7 @@ def train_and_evaluate(config, seed=42):
     print(config['log_name'])
 
     clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
-    roberta_tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-emotion-latest")
+    roberta_tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
     
     data = pd.read_csv(config["csv_path"])
     train_data, temp_data = train_test_split(data, test_size=0.3, random_state=seed)
@@ -296,7 +296,7 @@ def train_and_evaluate(config, seed=42):
     val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
-    model = MultiModalClassifier(num_labels=6)
+    model = MultiModalClassifier(num_labels=6, txt_model=config["model_name"], dropout_size=config["dropout"])
 
     if config.get("freeze_clip", False):
         model.freeze_clip()
@@ -304,8 +304,8 @@ def train_and_evaluate(config, seed=42):
         model.freeze_roberta()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
+    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
@@ -342,41 +342,54 @@ def main():
     epochs_list = [2, 5]
     freeze_clip_options = [True, False]
     freeze_roberta_options = [True, False]
-    log_name_base = "exp_roberta_base_lr1e-5"
-
+    txt_models = ["cardiffnlp/twitter-roberta-base-emotion-latest", "cardiffnlp/twitter-roberta-large-emotion-latest"]
+    lrs = [1e-5, 5e-6]
+    dropouts = [0.3, 0.5]
+    
     common_params = {
-        "learning_rate": 1e-5,
         "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
         "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
-
-    configs = []
-    for epochs in epochs_list:
-        for freeze_clip in freeze_clip_options:
-            for freeze_roberta in freeze_roberta_options:
-                if freeze_clip and freeze_roberta:
-                    continue
-
-                log_name = f"{log_name_base}_epochs{epochs}"
-                if freeze_clip:
-                    log_name += "_frozen_clip"
-                if freeze_roberta:
-                    log_name += "_frozen_roberta"
-
-                config = {
-                    "epochs": epochs,
-                    "freeze_clip": freeze_clip,
-                    "freeze_roberta": freeze_roberta,
-                    "log_name": log_name,
-                    **common_params
-                }
-                configs.append(config)
-
+    
     seed = 42 
-
+    
+    configs = []
+    for model in txt_models:
+        for epochs in epochs_list:
+            for freeze_clip in freeze_clip_options:
+                for freeze_roberta in freeze_roberta_options:
+                    for lr in lrs:
+                        for dropout in dropouts:
+                            if "base" in model:
+                                log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
+                            else:
+                                log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
+                                
+                            log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
+                            
+                            if freeze_clip:
+                                log_name += "_frozen_clip"
+                            if freeze_roberta:
+                                log_name += "_frozen_roberta"
+                                
+                            if freeze_clip and freeze_roberta:
+                                log_name = f"{log_name_base}_epochs{epochs}_seed{seed}_both_frozen"
+                                
+                            config = {
+                                "epochs": epochs,
+                                "freeze_clip": freeze_clip,
+                                "freeze_roberta": freeze_roberta,
+                                "log_name": log_name,
+                                "model_name": model,
+                                "learning_rate": lr,
+                                "dropout": dropout,
+                                **common_params
+                            }
+                            configs.append(config)
+                            
     for config in configs:
         train_and_evaluate(config, seed=seed)
 
