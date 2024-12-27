@@ -30,7 +30,10 @@ class MultiModalClassifier(nn.Module):
         combined_dim = clip_feature_dim + text_feature_dim
 
         self.mlp = nn.Sequential(
-            nn.Linear(combined_dim, hidden_dim),
+            nn.Linear(combined_dim, hidden_dim * 2),
+            nn.ReLU(),
+            nn.Dropout(dropout_size),
+            nn.Linear(hidden_dim * 2, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
@@ -305,7 +308,7 @@ def train_and_evaluate(config, seed=42):
 
     criterion = nn.KLDivLoss(reduction="batchmean")
     optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
@@ -339,12 +342,12 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    epochs_list = [2, 5]
+    epochs_list = [5]
     freeze_clip_options = [True, False]
     freeze_roberta_options = [True, False]
-    txt_models = ["cardiffnlp/twitter-roberta-base-emotion-latest", "cardiffnlp/twitter-roberta-large-emotion-latest"]
-    lrs = [1e-5, 5e-6]
-    dropouts = [0.3, 0.5]
+    txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest"]
+    lrs = [1e-5]
+    dropouts = [0.5]
     
     common_params = {
         "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
@@ -368,7 +371,7 @@ def main():
                             else:
                                 log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
                                 
-                            log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
+                            log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}"
                             
                             if freeze_clip:
                                 log_name += "_frozen_clip"
@@ -376,7 +379,7 @@ def main():
                                 log_name += "_frozen_roberta"
                                 
                             if freeze_clip and freeze_roberta:
-                                log_name = f"{log_name_base}_epochs{epochs}_seed{seed}_both_frozen"
+                                log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}_both_frozen"
                                 
                             config = {
                                 "epochs": epochs,
