@@ -25,15 +25,23 @@ class MultiModalClassifier(nn.Module):
         self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
         self.text_model = AutoModel.from_pretrained(txt_model)
 
-        clip_feature_dim = self.clip_model.config.projection_dim  
-        text_feature_dim = self.text_model.config.hidden_size
-        combined_dim = clip_feature_dim + text_feature_dim
+        clip_feature_dim = self.clip_model.config.projection_dim  # 768
+        text_feature_dim = self.text_model.config.hidden_size  # 1024
 
-        self.mlp = nn.Sequential(
-            nn.Linear(combined_dim, hidden_dim * 2),
+        # Transform features to the same size
+        self.image_transform = nn.Linear(clip_feature_dim, hidden_dim)
+        self.text_transform = nn.Linear(text_feature_dim, hidden_dim)
+
+        # Fusion Layer
+        self.fusion_layer = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),  # Combined size is 512 + 512 = 1024
             nn.ReLU(),
             nn.Dropout(dropout_size),
-            nn.Linear(hidden_dim * 2, hidden_dim),
+        )
+
+        # Final Classification Layer
+        self.classifier = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),  # Input size: fused + residual
             nn.ReLU(),
             nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
@@ -48,15 +56,25 @@ class MultiModalClassifier(nn.Module):
             param.requires_grad = False
 
     def forward(self, image, input_ids, attention_mask):
+        # Extract features
         image_features = self.clip_model.get_image_features(image)
-
         text_outputs = self.text_model(input_ids=input_ids, attention_mask=attention_mask)
-        text_features = text_outputs.last_hidden_state[:, 0, :] 
+        text_features = text_outputs.last_hidden_state[:, 0, :]  # CLS token representation
 
-        combined_features = torch.cat([image_features, text_features], dim=-1)
+        # Transform features
+        image_transformed = self.image_transform(image_features)
+        text_transformed = self.text_transform(text_features)
 
-        logits = self.mlp(combined_features)
+        # Concatenate and fuse features
+        combined_features = torch.cat([image_transformed, text_transformed], dim=-1)
+        fused_features = self.fusion_layer(combined_features)
+
+        # Final classification
+        logits = self.classifier(torch.cat([fused_features, image_transformed + text_transformed], dim=-1))
         return logits
+
+
+
 
 
 class MultiModalDataset(Dataset):
@@ -205,17 +223,34 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
     return avg_kl_div, avg_cosine_sim, avg_mse
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
+def train_model(model, train_loader, val_loader, criterion, optimizer, config, device, save_path=None, log_name=None):
+    epochs = config["epochs"]
     if log_name is None:
         log_name = f"experiment"
     writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
     best_val_loss = float("inf")
+    
+    patience = config.get("early_stopping_patience", 4) 
+    no_improvement_epochs = 0
 
     for epoch in range(epochs):
         model.train()
         total_train_loss = 0.0
         progress_bar = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs} - Training")
+        
+        if config.get("freeze_clip", False) and config.get("freeze_roberta", False):
+            if epoch == 2:  
+                for param in model.clip_model.parameters():
+                    param.requires_grad = True
+                print("Unfroze CLIP model")
 
+            if epoch == 4: 
+                for param in model.text_model.parameters():
+                    param.requires_grad = True
+                print("Unfroze RoBERTa model")
+
+        temperature = config.get("temperature", 1.0)
+        
         for batch in progress_bar:
             images = batch["image"].to(device)
             input_ids = batch["input_ids"].to(device)
@@ -224,7 +259,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
             optimizer.zero_grad()
             outputs = model(images, input_ids, attention_mask)
-            loss = criterion(torch.log_softmax(outputs, dim=-1), labels)
+            
+            loss = criterion(torch.log_softmax(outputs / temperature, dim=-1), labels / temperature)
 
             loss.backward()
             optimizer.step()
@@ -246,9 +282,16 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
         if val_kl_div < best_val_loss:
             best_val_loss = val_kl_div
+            no_improvement_epochs = 0
             if save_path:
                 torch.save(model.state_dict(), save_path)
                 print(f"Model saved at {save_path}")
+        else:
+            no_improvement_epochs += 1
+
+        if no_improvement_epochs >= patience:
+            print(f"Early stopping triggered after {patience} epochs without improvement")
+            break
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -307,7 +350,12 @@ def train_and_evaluate(config, seed=42):
         model.freeze_roberta()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
+    optimizer = optimizer = optim.AdamW([
+    {'params': model.clip_model.parameters(), 'lr': config["learning_rate"] * 0.1},  # Pretrained layer
+    {'params': model.text_model.parameters(), 'lr': config["learning_rate"] * 0.1},  # Pretrained layer
+    {'params': model.fusion_layer.parameters(), 'lr': config["learning_rate"]},       # New layer
+    {'params': model.classifier.parameters(), 'lr': config["learning_rate"]}         # New layer
+])
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -322,7 +370,7 @@ def train_and_evaluate(config, seed=42):
     print(f"Number of trainable parameters: {total_params}")
     
     train_model(
-        model, train_loader, val_loader, criterion, optimizer, config["epochs"], 
+        model, train_loader, val_loader, criterion, optimizer, config, 
         device, save_path=f"{experiment_dir}/best_model.pt", log_name=config["log_name"]
     )
 
@@ -342,19 +390,21 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    epochs_list = [5]
+    epochs_list = [2, 5]
     freeze_clip_options = [True, False]
     freeze_roberta_options = [True, False]
     txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest"]
-    lrs = [1e-5]
-    dropouts = [0.5]
+    lrs = [5e-5]
+    dropouts = [0.3]
     
     common_params = {
         "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
         "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
-        "image_col": "matched_filename"
+        "image_col": "matched_filename",
+        "temperature": 2.0, 
+        "early_stopping_patience": 4,
     }
     
     seed = 42 
@@ -367,11 +417,11 @@ def main():
                     for lr in lrs:
                         for dropout in dropouts:
                             if "base" in model:
-                                log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
+                                log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}_tmp2"
                             else:
-                                log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
+                                log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}_tmp2"
                                 
-                            log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}"
+                            log_name = f"{log_name_base}_hierarchical_epochs{epochs}_seed{seed}"
                             
                             if freeze_clip:
                                 log_name += "_frozen_clip"
@@ -379,8 +429,8 @@ def main():
                                 log_name += "_frozen_roberta"
                                 
                             if freeze_clip and freeze_roberta:
-                                log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}_both_frozen"
-                                
+                                log_name = f"{log_name_base}_hierarchical_epochs{epochs}_seed{seed}_both_frozen"
+
                             config = {
                                 "epochs": epochs,
                                 "freeze_clip": freeze_clip,
