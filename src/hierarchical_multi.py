@@ -249,7 +249,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, config, d
                     param.requires_grad = True
                 print("Unfroze RoBERTa model")
 
-        temperature = config.get("temperature", 1.0)
+        #temperature = config.get("temperature", 1.0)
         
         for batch in progress_bar:
             images = batch["image"].to(device)
@@ -260,7 +260,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, config, d
             optimizer.zero_grad()
             outputs = model(images, input_ids, attention_mask)
             
-            loss = criterion(torch.log_softmax(outputs / temperature, dim=-1), labels / temperature)
+            loss = criterion(torch.log_softmax(outputs, dim=-1), labels)
 
             loss.backward()
             optimizer.step()
@@ -356,7 +356,7 @@ def train_and_evaluate(config, seed=42):
     {'params': model.fusion_layer.parameters(), 'lr': config["learning_rate"]},       # New layer
     {'params': model.classifier.parameters(), 'lr': config["learning_rate"]}         # New layer
 ])
-    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
@@ -402,8 +402,7 @@ def main():
         "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
-        "image_col": "matched_filename",
-        "temperature": 2.0, 
+        "image_col": "matched_filename", 
         "early_stopping_patience": 4,
     }
     
@@ -417,9 +416,9 @@ def main():
                     for lr in lrs:
                         for dropout in dropouts:
                             if "base" in model:
-                                log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}_tmp2"
+                                log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
                             else:
-                                log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}_tmp2"
+                                log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
                                 
                             log_name = f"{log_name_base}_hierarchical_epochs{epochs}_seed{seed}"
                             
