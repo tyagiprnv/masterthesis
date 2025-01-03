@@ -30,12 +30,12 @@ class MultiModalClassifier(nn.Module):
         combined_dim = clip_feature_dim + text_feature_dim
 
         self.mlp = nn.Sequential(
-            nn.Linear(combined_dim, hidden_dim * 2),
-            nn.GELU(),
+            nn.Linear(combined_dim, hidden_dim),
+            nn.ReLU(),
             nn.Dropout(dropout_size),
-            nn.Linear(hidden_dim * 2, hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout_size),
+            #nn.Linear(hidden_dim * 2, hidden_dim),
+            #nn.GELU(),
+            #nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
         )
 
@@ -244,11 +244,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
         writer.add_scalar("Metrics/Val_Cosine_Sim", val_cosine_sim, epoch)
         writer.add_scalar("Metrics/Val_MSE", val_mse, epoch)
 
-        # if val_kl_div < best_val_loss:
-        #     best_val_loss = val_kl_div
-        #    if save_path:
-        #        torch.save(model.state_dict(), save_path)
-        #        print(f"Model saved at {save_path}")
+        if val_kl_div < best_val_loss:
+            best_val_loss = val_kl_div
+            if save_path:
+                torch.save(model.state_dict(), save_path)
+                print(f"Model saved at {save_path}")
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -307,8 +307,8 @@ def train_and_evaluate(config, seed=42):
         model.freeze_roberta()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
@@ -342,13 +342,13 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["february"]
-    epochs_list = [5]
-    freeze_clip_options = [False, True]
-    freeze_roberta_options = [False, True]
-    txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest"]
+    months = ["february", "august"]
+    epochs_list = [2]
+    freeze_clip_options = [False]
+    freeze_roberta_options = [False]
+    txt_models = ["cardiffnlp/twitter-roberta-base-emotion-latest"]
     lrs = [1e-05]
-    dropouts = [0.5]
+    dropouts = [0.3]
     
     common_params = {
         "label_col": "averaged_predictions",
@@ -356,7 +356,7 @@ def main():
         "image_col": "matched_filename"
     }
     
-    seed = 42 
+    seed = 7 
     
     configs = []
     for month in months:
@@ -367,11 +367,11 @@ def main():
                         for lr in lrs:
                             for dropout in dropouts:
                                 if "base" in model:
-                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
+                                    log_name_base = f"exp_roberta_base_lr{lr}_drop{dropout}"
                                 else:
-                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
+                                    log_name_base = f"exp_roberta_large_lr{lr}_drop{dropout}"
                                     
-                                log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}"
+                                log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
                                     
                                 if freeze_clip:
                                     log_name += "_frozen_clip"
@@ -379,7 +379,7 @@ def main():
                                     log_name += "_frozen_roberta"
                                     
                                 if freeze_clip and freeze_roberta:
-                                    log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}_both_frozen"
+                                    log_name = f"{log_name_base}_epochs{epochs}_seed{seed}_both_frozen"
                                     
                                 if month == "february":
                                     csv_path = "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv"
@@ -403,7 +403,7 @@ def main():
                                     **common_params
                                 }
                                 configs.append(config)
-
+                                
     for config in configs:
         train_and_evaluate(config, seed=seed)
 

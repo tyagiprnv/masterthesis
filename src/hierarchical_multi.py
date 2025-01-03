@@ -391,8 +391,8 @@ def train_and_evaluate(config, seed=42):
 
 def main():
     epochs_list = [2, 5]
-    freeze_clip_options = [True, False]
-    freeze_roberta_options = [True, False]
+    freeze_clip_options = [False]
+    freeze_roberta_options = [False]
     txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest"]
     lrs = [5e-5]
     dropouts = [0.3]
