@@ -199,11 +199,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
         writer.add_scalar("Metrics/Val_Cosine_Sim", val_cosine_sim, epoch)
         writer.add_scalar("Metrics/Val_MSE", val_mse, epoch)
 
-        if val_kl_div < best_val_loss:
-            best_val_loss = val_kl_div
-            if save_path:
-                torch.save(model.state_dict(), save_path)
-                print(f"Model saved at {save_path}")
+        #if val_kl_div < best_val_loss:
+        #    best_val_loss = val_kl_div
+        #    if save_path:
+        #        torch.save(model.state_dict(), save_path)
+        #        print(f"Model saved at {save_path}")
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -253,7 +253,7 @@ def train_and_evaluate(config, seed=42):
         model.freeze_clip()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -277,39 +277,44 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    epochs_list = [2, 5, 10]
-    freeze_clip_options = [True, False]
-    lr = 5e-6
-    dropout = 0.3
-
+    
+    epochs_list = [10]
+    freeze_clip_options = [False]
+    lrs = [1e-05]
+    dropouts = [0.3]
+    
     common_params = {
-        "learning_rate": lr,
-        "dropout": dropout,
         "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
+        "image_dir" : "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
     
-    log_name_base = f"exp_adamw_only_clip_lr{lr}_drop{dropout}"
-
-    configs = []
     seed = 42
+    
+    configs = []
+    
     for epochs in epochs_list:
-        for freeze_clip in freeze_clip_options:  
-            log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
-            if freeze_clip:
-                log_name += "_frozen"
-
-            config = {
-                "epochs": epochs,
-                "log_name": log_name,
-                "freeze_clip" : freeze_clip,
-                **common_params
-                }
-            configs.append(config) 
-
+        for freeze_clip in freeze_clip_options:
+            for lr in lrs:
+                for dropout in dropouts:
+                    log_name_base = f"exp_only_clip_lr{lr}_drop{dropout}"    
+                    log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
+                            
+                    if freeze_clip:
+                        log_name += "_frozen"
+                        
+                    config = {
+                        "epochs": epochs,
+                        "freeze_clip": freeze_clip,
+                        "log_name": log_name,
+                        "learning_rate": lr,
+                        "dropout": dropout,
+                        **common_params
+                        }
+                    configs.append(config)
+    
     for config in configs:
         train_and_evaluate(config, seed=seed)
 

@@ -152,7 +152,7 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/february_exp/{log_name}")
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -238,14 +238,14 @@ def train_and_evaluate(config, seed=42):
         model.freeze_roberta()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_february/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/february_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
@@ -266,40 +266,42 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    epochs_list = [2, 5, 10]
-    freeze_roberta_options = [True, False]
-    lr = 5e-6
-    dropout = 0.3
-
+    epochs_list = [10]
+    freeze_roberta_options = [False]
+    lrs = [1e-05]
+    dropouts = [0.3]
+    
     common_params = {
-        "learning_rate": lr,
-        "dropout": dropout,
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
+        "csv_path": "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv",
+        "image_dir" : "/work/ptyagi/ClimateVisions/Images/2019/02_February",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
     
-    log_name_base = f"exp_adamw_only_roberta_large_lr{lr}_drop{dropout}"
-    
     seed = 42
-
+    
     configs = []
     for epochs in epochs_list:
         for freeze_roberta in freeze_roberta_options:
-            log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
-            if freeze_roberta:
-                log_name += "_frozen"
-
-            config = {
-                "epochs": epochs,
-                "log_name": log_name,
-                "freeze_roberta": freeze_roberta,
-                **common_params
-                }
-            configs.append(config) 
-
+            for lr in lrs:
+                for dropout in dropouts:
+                    log_name_base = f"exp_only_roberta_large_lr{lr}_drop{dropout}"    
+                    log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
+                            
+                    if freeze_roberta:
+                        log_name += "_frozen"
+    
+                    config = {
+                        "epochs": epochs,
+                        "freeze_roberta": freeze_roberta,
+                        "log_name": log_name,
+                        "learning_rate": lr,
+                        "dropout": dropout,
+                        **common_params
+                        }
+                    configs.append(config)
+                            
     for config in configs:
         train_and_evaluate(config, seed=seed)
 

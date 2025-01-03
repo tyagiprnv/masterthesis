@@ -227,7 +227,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, config, d
     epochs = config["epochs"]
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/february_exp/{log_name}")
     best_val_loss = float("inf")
     
     patience = config.get("early_stopping_patience", 4) 
@@ -283,9 +283,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, config, d
         if val_kl_div < best_val_loss:
             best_val_loss = val_kl_div
             no_improvement_epochs = 0
-            if save_path:
-                torch.save(model.state_dict(), save_path)
-                print(f"Model saved at {save_path}")
+            # if save_path:
+            #     torch.save(model.state_dict(), save_path)
+            #    print(f"Model saved at {save_path}")
         else:
             no_improvement_epochs += 1
 
@@ -356,15 +356,15 @@ def train_and_evaluate(config, seed=42):
     {'params': model.fusion_layer.parameters(), 'lr': config["learning_rate"]},       # New layer
     {'params': model.classifier.parameters(), 'lr': config["learning_rate"]}         # New layer
 ])
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_february/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
     initial_weights = save_initial_weights(model)
 
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/february_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
@@ -398,15 +398,15 @@ def main():
     dropouts = [0.3]
     
     common_params = {
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
+        "csv_path": "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv",
+        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/02_February",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename", 
         "early_stopping_patience": 4,
     }
     
-    seed = 42 
+    seed = 42
     
     configs = []
     for model in txt_models:

@@ -31,10 +31,10 @@ class MultiModalClassifier(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Linear(combined_dim, hidden_dim * 2),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Dropout(dropout_size),
             nn.Linear(hidden_dim * 2, hidden_dim),
-            nn.ReLU(),
+            nn.GELU(),
             nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
         )
@@ -205,10 +205,10 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
     return avg_kl_div, avg_cosine_sim, avg_mse
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, month, save_path=None, log_name=None):
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/{month}_exp/{log_name}")
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -244,11 +244,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
         writer.add_scalar("Metrics/Val_Cosine_Sim", val_cosine_sim, epoch)
         writer.add_scalar("Metrics/Val_MSE", val_mse, epoch)
 
-        if val_kl_div < best_val_loss:
-            best_val_loss = val_kl_div
-            if save_path:
-                torch.save(model.state_dict(), save_path)
-                print(f"Model saved at {save_path}")
+        # if val_kl_div < best_val_loss:
+        #     best_val_loss = val_kl_div
+        #    if save_path:
+        #        torch.save(model.state_dict(), save_path)
+        #        print(f"Model saved at {save_path}")
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -311,19 +311,19 @@ def train_and_evaluate(config, seed=42):
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
     initial_weights = save_initial_weights(model)
 
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/{config['month']}_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
     
     train_model(
         model, train_loader, val_loader, criterion, optimizer, config["epochs"], 
-        device, save_path=f"{experiment_dir}/best_model.pt", log_name=config["log_name"]
+        device, config['month'], save_path=f"{experiment_dir}/best_model.pt", log_name=config["log_name"]
     )
 
     weight_differences = compare_weights(initial_weights, model)
@@ -342,16 +342,15 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
+    months = ["february"]
     epochs_list = [5]
-    freeze_clip_options = [True, False]
-    freeze_roberta_options = [True, False]
+    freeze_clip_options = [False, True]
+    freeze_roberta_options = [False, True]
     txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest"]
-    lrs = [1e-5]
+    lrs = [1e-05]
     dropouts = [0.5]
     
     common_params = {
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-        "image_dir": "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
@@ -360,39 +359,51 @@ def main():
     seed = 42 
     
     configs = []
-    for model in txt_models:
-        for epochs in epochs_list:
-            for freeze_clip in freeze_clip_options:
-                for freeze_roberta in freeze_roberta_options:
-                    for lr in lrs:
-                        for dropout in dropouts:
-                            if "base" in model:
-                                log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
-                            else:
-                                log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
-                                
-                            log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}"
-                            
-                            if freeze_clip:
-                                log_name += "_frozen_clip"
-                            if freeze_roberta:
-                                log_name += "_frozen_roberta"
-                                
-                            if freeze_clip and freeze_roberta:
-                                log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}_both_frozen"
-                                
-                            config = {
-                                "epochs": epochs,
-                                "freeze_clip": freeze_clip,
-                                "freeze_roberta": freeze_roberta,
-                                "log_name": log_name,
-                                "model_name": model,
-                                "learning_rate": lr,
-                                "dropout": dropout,
-                                **common_params
-                            }
-                            configs.append(config)
-                            
+    for month in months:
+        for model in txt_models:
+            for epochs in epochs_list:
+                for freeze_clip in freeze_clip_options:
+                    for freeze_roberta in freeze_roberta_options:
+                        for lr in lrs:
+                            for dropout in dropouts:
+                                if "base" in model:
+                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
+                                else:
+                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
+                                    
+                                log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}"
+                                    
+                                if freeze_clip:
+                                    log_name += "_frozen_clip"
+                                if freeze_roberta:
+                                    log_name += "_frozen_roberta"
+                                    
+                                if freeze_clip and freeze_roberta:
+                                    log_name = f"{log_name_base}_bigger_mlp_epochs{epochs}_seed{seed}_both_frozen"
+                                    
+                                if month == "february":
+                                    csv_path = "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv"
+                                    image_dir = "/work/ptyagi/ClimateVisions/Images/2019/02_February"
+                                    
+                                if month == "august":
+                                    csv_path = "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv"
+                                    image_dir = "/work/ptyagi/ClimateVisions/Images/2019/08_August"
+
+                                config = {
+                                    "epochs": epochs,
+                                    "freeze_clip": freeze_clip,
+                                    "freeze_roberta": freeze_roberta,
+                                    "log_name": log_name,
+                                    "model_name": model,
+                                    "learning_rate": lr,
+                                    "dropout": dropout,
+                                    "csv_path": csv_path,
+                                    "image_dir": image_dir,
+                                    "month": month,
+                                    **common_params
+                                }
+                                configs.append(config)
+
     for config in configs:
         train_and_evaluate(config, seed=seed)
 
