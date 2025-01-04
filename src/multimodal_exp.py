@@ -246,9 +246,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
         if val_kl_div < best_val_loss:
             best_val_loss = val_kl_div
-            if save_path:
-                torch.save(model.state_dict(), save_path)
-                print(f"Model saved at {save_path}")
+            #if save_path:
+            #    torch.save(model.state_dict(), save_path)
+            #    print(f"Model saved at {save_path}")
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -308,7 +308,7 @@ def train_and_evaluate(config, seed=42):
 
     criterion = nn.KLDivLoss(reduction="batchmean")
     optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
@@ -343,12 +343,12 @@ def train_and_evaluate(config, seed=42):
 
 def main():
     months = ["february", "august"]
-    epochs_list = [2]
-    freeze_clip_options = [False]
-    freeze_roberta_options = [False]
-    txt_models = ["cardiffnlp/twitter-roberta-base-emotion-latest"]
-    lrs = [1e-05]
-    dropouts = [0.3]
+    epochs_list = [2, 5]
+    freeze_clip_options = [False, True]
+    freeze_roberta_options = [False, True]
+    txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest", "cardiffnlp/twitter-roberta-base-emotion-latest"]
+    lrs = [1e-05, 5e-06]
+    dropouts = [0.3, 0.5]
     
     common_params = {
         "label_col": "averaged_predictions",
@@ -367,9 +367,9 @@ def main():
                         for lr in lrs:
                             for dropout in dropouts:
                                 if "base" in model:
-                                    log_name_base = f"exp_roberta_base_lr{lr}_drop{dropout}"
+                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
                                 else:
-                                    log_name_base = f"exp_roberta_large_lr{lr}_drop{dropout}"
+                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
                                     
                                 log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
                                     
@@ -402,8 +402,8 @@ def main():
                                     "month": month,
                                     **common_params
                                 }
-                                configs.append(config)
-                                
+                                configs.append(config)              
+
     for config in configs:
         train_and_evaluate(config, seed=seed)
 

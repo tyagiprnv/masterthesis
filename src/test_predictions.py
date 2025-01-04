@@ -147,30 +147,36 @@ def multimodal_prediction_workflow(
     model.eval()
 
     predictions_list = []
+    cosine_similarities = []
     conversation_ids = test_data[conversation_id_col].tolist()
-    emotions = ['fear', 'disgust', 'joy', 'surprise', 'sadness','anger']
+    emotions = ['anger', 'sadness', 'fear', 'joy', 'disgust', 'surprise']
 
     with torch.no_grad():
         for batch in test_loader:
             images = batch["image"].to(device)
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
+            labels = batch["labels"].to(device)
 
             logits = model(images, input_ids, attention_mask)
-            probs = torch.softmax(logits, dim=-1).cpu().numpy()
-            
+            probs = torch.softmax(logits, dim=-1)
+
             formatted_predictions = [
-                [(emotions[i], prob) for i, prob in enumerate(pred)] for pred in probs
+                [(emotions[i], prob.item()) for i, prob in enumerate(pred)] for pred in probs
             ]
             predictions_list.extend(formatted_predictions)
+
+            batch_cosine_similarities = F.cosine_similarity(probs, labels, dim=1)
+            cosine_similarities.extend(batch_cosine_similarities.cpu().numpy())
 
     result_df = pd.DataFrame({
         "conversation_id": conversation_ids[:len(predictions_list)],
         "predictions": predictions_list,
+        "cosine_similarity_model": cosine_similarities,
     })
 
     result_df.to_csv(output_csv, index=False)
-    print(f"Predictions saved to {output_csv}")
+    print(f"Predictions and cosine similarities saved to {output_csv}")
 
 
 multimodal_prediction_workflow(
@@ -185,7 +191,7 @@ multimodal_prediction_workflow(
     num_labels=6,
     batch_size=8,
     dropout_size=0.3,
-    output_csv="/work/ptyagi/masterthesis/data/test_predictions.csv",
+    output_csv="/work/ptyagi/masterthesis/data/test_predictions_with_cosine.csv",
     device="cuda:7",
 )
 
