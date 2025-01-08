@@ -30,12 +30,12 @@ class MultiModalClassifier(nn.Module):
         combined_dim = clip_feature_dim + text_feature_dim
 
         self.mlp = nn.Sequential(
-            nn.Linear(combined_dim, hidden_dim),
-            nn.ReLU(),
+            nn.Linear(combined_dim, hidden_dim * 2),
+            nn.GELU(),
             nn.Dropout(dropout_size),
-            #nn.Linear(hidden_dim * 2, hidden_dim),
-            #nn.GELU(),
-            #nn.Dropout(dropout_size),
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
         )
 
@@ -307,7 +307,7 @@ def train_and_evaluate(config, seed=42):
         model.freeze_roberta()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -342,7 +342,7 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["february", "august"]
+    months = ["august", "february"]
     epochs_list = [2, 5]
     freeze_clip_options = [False, True]
     freeze_roberta_options = [False, True]
@@ -356,7 +356,7 @@ def main():
         "image_col": "matched_filename"
     }
     
-    seed = 7 
+    seed = 42 
     
     configs = []
     for month in months:
@@ -367,9 +367,9 @@ def main():
                         for lr in lrs:
                             for dropout in dropouts:
                                 if "base" in model:
-                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
+                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}_gelu"
                                 else:
-                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
+                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}_gelu"
                                     
                                 log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
                                     

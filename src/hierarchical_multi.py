@@ -356,7 +356,7 @@ def train_and_evaluate(config, seed=42):
     {'params': model.fusion_layer.parameters(), 'lr': config["learning_rate"]},       # New layer
     {'params': model.classifier.parameters(), 'lr': config["learning_rate"]}         # New layer
 ])
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
@@ -406,30 +406,30 @@ def main():
     }
     
     config_list=[
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42_both_frozen',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42_frozen_clip',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42_frozen_roberta',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed7',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed7_both_frozen',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed7_frozen_clip',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed7_frozen_roberta',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42_both_frozen',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42_frozen_clip',
-    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42_frozen_roberta',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42_both_frozen',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42_frozen_clip',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs2_seed42_frozen_roberta',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed7',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed7_both_frozen',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed7_frozen_clip',
     'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed7_frozen_roberta',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed7',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed7_both_frozen',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed7_frozen_clip',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed7_frozen_roberta',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed7',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed7_both_frozen',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed7_frozen_clip',
-    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed7_frozen_roberta']
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42_both_frozen',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42_frozen_clip',
+    'exp_adamw_roberta_large_lr5e-05_drop0.3_hierarchical_epochs5_seed42_frozen_roberta',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed42',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed42_both_frozen',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed42_frozen_clip',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs2_seed42_frozen_roberta',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed42',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed42_both_frozen',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed42_frozen_clip',
+    'exp_adamw_roberta_large_lr5e-05_drop0.5_hierarchical_epochs5_seed42_frozen_roberta']
     
     configs = []
     for month in months:
@@ -462,7 +462,7 @@ def main():
                                     if month == "august":
                                         csv_path = "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv"
                                         image_dir = "/work/ptyagi/ClimateVisions/Images/2019/08_August"
-
+                                    
                                     if log_name in config_list:
                                         config = {
                                             "epochs": epochs,

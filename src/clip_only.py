@@ -162,10 +162,10 @@ def evaluate_model(model, dataloader, device, experiment_dir=None, save_plots=Fa
     return avg_kl_div, avg_cosine_sim, avg_mse
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, save_path=None, log_name=None):
+def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device, month, save_path=None, log_name=None):
     if log_name is None:
         log_name = f"experiment"
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{log_name}")
+    writer = SummaryWriter(log_dir=f"runs/{month}_exp/{log_name}")
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -257,17 +257,17 @@ def train_and_evaluate(config, seed=42):
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    experiment_dir = f"models/multimodal_experiments_august/{config['log_name']}"
+    experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
     os.makedirs(experiment_dir, exist_ok=True)
 
-    writer = SummaryWriter(log_dir=f"runs/august_exp/{config['log_name']}")
+    writer = SummaryWriter(log_dir=f"runs/{config['month']}_exp/{config['log_name']}")
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Number of trainable parameters: {total_params}")
     
     train_model(
         model, train_loader, val_loader, criterion, optimizer, config["epochs"], 
-        device, save_path=f"{experiment_dir}/best_model.pt", log_name=config["log_name"]
+        device, config['month'], save_path=f"{experiment_dir}/best_model.pt", log_name=config["log_name"]
     )
 
     test_kl_div, test_cosine_sim, test_mse = evaluate_model(model, test_loader, device, experiment_dir=experiment_dir, save_plots=True, writer=writer)
@@ -277,43 +277,52 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    
-    epochs_list = [10]
-    freeze_clip_options = [False]
-    lrs = [1e-05]
-    dropouts = [0.3]
+    months = ["august", "february"]
+    epochs_list = [2, 5]
+    freeze_clip_options = [False, True]
+    lrs = [1e-05, 5e-06]
+    dropouts = [0.3, 0.5]
     
     common_params = {
-        "csv_path": "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-        "image_dir" : "/work/ptyagi/ClimateVisions/Images/2019/08_August",
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
     
-    seed = 42
+    seed = 7
     
     configs = []
-    
-    for epochs in epochs_list:
-        for freeze_clip in freeze_clip_options:
-            for lr in lrs:
-                for dropout in dropouts:
-                    log_name_base = f"exp_only_clip_lr{lr}_drop{dropout}"    
-                    log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
-                            
-                    if freeze_clip:
-                        log_name += "_frozen"
+    for month in months:
+        for epochs in epochs_list:
+            for freeze_clip in freeze_clip_options:
+                for lr in lrs:
+                    for dropout in dropouts:
+                        log_name_base = f"exp_only_clip_lr{lr}_drop{dropout}"    
+                        log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
+                                
+                        if freeze_clip:
+                            log_name += "_frozen"
                         
-                    config = {
-                        "epochs": epochs,
-                        "freeze_clip": freeze_clip,
-                        "log_name": log_name,
-                        "learning_rate": lr,
-                        "dropout": dropout,
-                        **common_params
-                        }
-                    configs.append(config)
+                        if month == "february":
+                            csv_path = "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv"
+                            image_dir = "/work/ptyagi/ClimateVisions/Images/2019/02_February"
+                                    
+                        if month == "august":
+                            csv_path = "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv"
+                            image_dir = "/work/ptyagi/ClimateVisions/Images/2019/08_August"
+
+                        config = {
+                            "epochs": epochs,
+                            "freeze_clip": freeze_clip,
+                            "log_name": log_name,
+                            "learning_rate": lr,
+                            "dropout": dropout,
+                            "csv_path": csv_path,
+                            "image_dir": image_dir,
+                            "month": month,
+                            **common_params
+                            }
+                        configs.append(config)
     
     for config in configs:
         train_and_evaluate(config, seed=seed)
