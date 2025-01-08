@@ -27,3 +27,4 @@ data/predictions/aug/divergence.csv
 experiments_1.log
 experiments_2.log
 experiments_indiv.log
+data/predictions/aug/mse.csv
