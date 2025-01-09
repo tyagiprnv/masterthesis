@@ -278,10 +278,10 @@ def train_and_evaluate(config, seed=42):
 
 def main():
     months = ["august", "february"]
-    epochs_list = [2, 5]
+    epochs_list = [10]
     freeze_clip_options = [False, True]
     lrs = [1e-05, 5e-06]
-    dropouts = [0.3, 0.5]
+    dropouts = [0.3]
     
     common_params = {
         "label_col": "averaged_predictions",
