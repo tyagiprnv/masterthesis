@@ -199,11 +199,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
         writer.add_scalar("Metrics/Val_Cosine_Sim", val_cosine_sim, epoch)
         writer.add_scalar("Metrics/Val_MSE", val_mse, epoch)
 
-        #if val_kl_div < best_val_loss:
-        #    best_val_loss = val_kl_div
-        #    if save_path:
-        #        torch.save(model.state_dict(), save_path)
-        #        print(f"Model saved at {save_path}")
+        if val_kl_div < best_val_loss:
+            best_val_loss = val_kl_div
+            if save_path:
+                torch.save(model.state_dict(), save_path)
+                print(f"Model saved at {save_path}")
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -253,7 +253,7 @@ def train_and_evaluate(config, seed=42):
         model.freeze_clip()
 
     criterion = nn.KLDivLoss(reduction="batchmean")
-    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+    optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -277,10 +277,10 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["august", "february"]
-    epochs_list = [10]
+    months = ["august"]
+    epochs_list = [2]
     freeze_clip_options = [False, True]
-    lrs = [1e-05, 5e-06]
+    lrs = [5e-06]
     dropouts = [0.3]
     
     common_params = {
@@ -289,7 +289,11 @@ def main():
         "image_col": "matched_filename"
     }
     
-    seed = 7
+    seed = 42
+    
+    allowed_log_names = [
+        "exp_adamw_only_clip_lr5e-06_drop0.3_epochs2_seed42"
+    ]
     
     configs = []
     for month in months:
@@ -297,11 +301,14 @@ def main():
             for freeze_clip in freeze_clip_options:
                 for lr in lrs:
                     for dropout in dropouts:
-                        log_name_base = f"exp_only_clip_lr{lr}_drop{dropout}"    
+                        log_name_base = f"exp_adamw_only_clip_lr{lr}_drop{dropout}"    
                         log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
                                 
                         if freeze_clip:
                             log_name += "_frozen"
+                            
+                        if log_name not in allowed_log_names:
+                                    continue
                         
                         if month == "february":
                             csv_path = "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv"

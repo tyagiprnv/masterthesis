@@ -148,6 +148,8 @@ def multimodal_prediction_workflow(
 
     predictions_list = []
     cosine_similarities = []
+    kl_divergences = []
+    mean_squared_errors = []
     conversation_ids = test_data[conversation_id_col].tolist()
     emotions = ['anger', 'sadness', 'fear', 'joy', 'disgust', 'surprise']
 
@@ -169,14 +171,22 @@ def multimodal_prediction_workflow(
             batch_cosine_similarities = F.cosine_similarity(probs, labels, dim=1)
             cosine_similarities.extend(batch_cosine_similarities.cpu().numpy())
 
+            batch_kl_divergences = F.kl_div(probs.log(), labels, reduction='none').sum(dim=1)  
+            kl_divergences.extend(batch_kl_divergences.cpu().numpy())
+
+            batch_mse = F.mse_loss(probs, labels, reduction='none').mean(dim=1)  
+            mean_squared_errors.extend(batch_mse.cpu().numpy())
+
     result_df = pd.DataFrame({
         "conversation_id": conversation_ids[:len(predictions_list)],
         "predictions": predictions_list,
         "cosine_similarity_model": cosine_similarities,
+        "kl_divergence": kl_divergences,
+        "mean_squared_error": mean_squared_errors,
     })
 
     result_df.to_csv(output_csv, index=False)
-    print(f"Predictions and cosine similarities saved to {output_csv}")
+    print(f"Predictions and evaluation metrics saved to {output_csv}")
 
 
 multimodal_prediction_workflow(
@@ -186,12 +196,12 @@ multimodal_prediction_workflow(
     image_col="matched_filename",
     text_col="tweet_text",
     conversation_id_col="conversation_id", 
-    model_path="/work/ptyagi/masterthesis/src/models/multimodal_experiments_august/exp_roberta_base_lr1e-05_drop0.3_epochs2_seed42/best_model.pt",
+    model_path="/work/ptyagi/masterthesis/src/models/multimodal_experiments_august/exp_adamw_roberta_base_lr5e-06_drop0.3_epochs2_seed42/best_model.pt",
     tokenizer_name="cardiffnlp/twitter-roberta-base-emotion-latest",
     num_labels=6,
     batch_size=8,
     dropout_size=0.3,
-    output_csv="/work/ptyagi/masterthesis/data/test_predictions_with_cosine.csv",
+    output_csv="/work/ptyagi/masterthesis/data/test_predictions_with_metrics_multi.csv",
     device="cuda:7",
 )
 

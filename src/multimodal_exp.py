@@ -30,12 +30,12 @@ class MultiModalClassifier(nn.Module):
         combined_dim = clip_feature_dim + text_feature_dim
 
         self.mlp = nn.Sequential(
-            nn.Linear(combined_dim, hidden_dim * 2),
-            nn.GELU(),
+            nn.Linear(combined_dim, hidden_dim),
+            nn.ReLU(),
             nn.Dropout(dropout_size),
-            nn.Linear(hidden_dim * 2, hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout_size),
+            #nn.Linear(hidden_dim * 2, hidden_dim),
+            #nn.GELU(),
+            #nn.Dropout(dropout_size),
             nn.Linear(hidden_dim, num_labels)
         )
 
@@ -246,9 +246,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
         if val_kl_div < best_val_loss:
             best_val_loss = val_kl_div
-            #if save_path:
-            #    torch.save(model.state_dict(), save_path)
-            #    print(f"Model saved at {save_path}")
+            if save_path:
+                torch.save(model.state_dict(), save_path)
+                print(f"Model saved at {save_path}")
 
     writer.close()
     print(f"Logs saved to runs/{log_name}")
@@ -308,7 +308,7 @@ def train_and_evaluate(config, seed=42):
 
     criterion = nn.KLDivLoss(reduction="batchmean")
     optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
@@ -342,22 +342,26 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["august", "february"]
+    months = ["august"]
     epochs_list = [2, 5]
     freeze_clip_options = [False, True]
     freeze_roberta_options = [False, True]
     txt_models = ["cardiffnlp/twitter-roberta-large-emotion-latest", "cardiffnlp/twitter-roberta-base-emotion-latest"]
     lrs = [1e-05, 5e-06]
     dropouts = [0.3, 0.5]
-    
+
     common_params = {
         "label_col": "averaged_predictions",
         "text_col": "tweet_text",
         "image_col": "matched_filename"
     }
-    
+
     seed = 42 
-    
+
+    allowed_log_names = [
+        "exp_adamw_roberta_base_lr5e-06_drop0.3_epochs2_seed42"
+    ]
+
     configs = []
     for month in months:
         for model in txt_models:
@@ -367,28 +371,31 @@ def main():
                         for lr in lrs:
                             for dropout in dropouts:
                                 if "base" in model:
-                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}_gelu"
+                                    log_name_base = f"exp_adamw_roberta_base_lr{lr}_drop{dropout}"
                                 else:
-                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}_gelu"
-                                    
+                                    log_name_base = f"exp_adamw_roberta_large_lr{lr}_drop{dropout}"
+
                                 log_name = f"{log_name_base}_epochs{epochs}_seed{seed}"
-                                    
+
                                 if freeze_clip:
                                     log_name += "_frozen_clip"
                                 if freeze_roberta:
                                     log_name += "_frozen_roberta"
-                                    
+
                                 if freeze_clip and freeze_roberta:
                                     log_name = f"{log_name_base}_epochs{epochs}_seed{seed}_both_frozen"
-                                    
+
+                                if log_name not in allowed_log_names:
+                                    continue 
+
                                 if month == "february":
                                     csv_path = "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv"
                                     image_dir = "/work/ptyagi/ClimateVisions/Images/2019/02_February"
-                                    
+
                                 if month == "august":
                                     csv_path = "/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv"
                                     image_dir = "/work/ptyagi/ClimateVisions/Images/2019/08_August"
-
+                                print(log_name)
                                 config = {
                                     "epochs": epochs,
                                     "freeze_clip": freeze_clip,

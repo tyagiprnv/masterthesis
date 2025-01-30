@@ -266,8 +266,8 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["august", "february"]
-    epochs_list = [2, 5, 10]
+    months = ["august"]
+    epochs_list = [5]
     freeze_roberta_options = [False, True]
     lrs = [1e-05, 5e-06]
     dropouts = [0.3]
@@ -280,7 +280,11 @@ def main():
         "image_col": "matched_filename"
     }
     
-    seed = 7
+    seed = 42
+    
+    allowed_log_names = [
+        "exp_only_roberta_large_lr5e-06_drop0.3_epochs5_seed42"
+    ]
     
     configs = []
     for month in months:
@@ -293,6 +297,9 @@ def main():
                                 
                         if freeze_roberta:
                             log_name += "_frozen"
+                            
+                        if log_name not in allowed_log_names:
+                                    continue
                             
                         if month == "february":
                             csv_path = "/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv"
