@@ -155,11 +155,11 @@ def text_prediction_workflow(
     print(f"Predictions and evaluation metrics saved to {output_csv}")
 
 text_prediction_workflow(
-    csv_path="/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
+    csv_path="/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv",
     label_col="averaged_predictions",
     text_col="tweet_text",
     conversation_id_col="conversation_id", 
-    model_path="/work/ptyagi/masterthesis/src/models/multimodal_experiments_august/exp_only_roberta_large_lr5e-06_drop0.3_epochs5_seed42/best_model.pt",
+    model_path="/work/ptyagi/masterthesis/src/models/multimodal_experiments_february/exp_only_roberta_large_lr5e-06_drop0.3_epochs5_seed42/best_model.pt",
     tokenizer_name="cardiffnlp/twitter-roberta-large-emotion-latest",
     num_labels=6,
     batch_size=16,

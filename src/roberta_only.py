@@ -266,7 +266,7 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["august"]
+    months = ["february"]
     epochs_list = [5]
     freeze_roberta_options = [False, True]
     lrs = [1e-05, 5e-06]

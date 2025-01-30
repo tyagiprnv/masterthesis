@@ -190,19 +190,19 @@ def multimodal_prediction_workflow(
 
 
 multimodal_prediction_workflow(
-    csv_path="/work/ptyagi/masterthesis/data/predictions/aug/averaged_predictions.csv",
-    image_dir="/work/ptyagi/ClimateVisions/Images/2019/08_August",
+    csv_path="/work/ptyagi/masterthesis/data/predictions/feb/averaged_predictions.csv",
+    image_dir="/work/ptyagi/ClimateVisions/Images/2019/02_February",
     label_col="averaged_predictions",
     image_col="matched_filename",
     text_col="tweet_text",
     conversation_id_col="conversation_id", 
-    model_path="/work/ptyagi/masterthesis/src/models/multimodal_experiments_august/exp_adamw_roberta_base_lr5e-06_drop0.3_epochs2_seed42/best_model.pt",
+    model_path="/work/ptyagi/masterthesis/src/models/multimodal_experiments_february/exp_adamw_roberta_base_lr5e-06_drop0.3_epochs2_seed42/best_model.pt",
     tokenizer_name="cardiffnlp/twitter-roberta-base-emotion-latest",
     num_labels=6,
     batch_size=8,
     dropout_size=0.3,
     output_csv="/work/ptyagi/masterthesis/data/test_predictions_with_metrics_multi.csv",
-    device="cuda:7",
+    device="cuda:1",
 )
 
 

@@ -308,7 +308,7 @@ def train_and_evaluate(config, seed=42):
 
     criterion = nn.KLDivLoss(reduction="batchmean")
     optimizer = optim.AdamW(model.parameters(), lr=config["learning_rate"])
-    device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     experiment_dir = f"models/multimodal_experiments_{config['month']}/{config['log_name']}"
@@ -342,7 +342,7 @@ def train_and_evaluate(config, seed=42):
 
 
 def main():
-    months = ["august"]
+    months = ["february"]
     epochs_list = [2, 5]
     freeze_clip_options = [False, True]
     freeze_roberta_options = [False, True]
