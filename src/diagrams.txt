@@ -1,0 +1,148 @@
+#residual
+digraph MLP {
+    rankdir=TB;
+    
+    Input1 [label="Text", shape=ellipse, style=filled, fillcolor=lightgrey];
+    Input2 [label="Image", shape=ellipse, style=filled, fillcolor=lightgrey];
+    
+    Roberta [label="RoBERTa", shape=box, style=filled, fillcolor=white];
+    VisionModel [label="CLIP", shape=box, style=filled, fillcolor=white];
+    
+    subgraph cluster_1 {
+        style=filled;
+        color=lightgrey;
+        node [style=filled, color=white];
+        Roberta;
+        VisionModel;
+        label = "Feature Extraction";
+    }
+    
+    TextTransform [label="Linear
+(1024 -> 512)", shape=box, style=filled, fillcolor=white];
+    ImageTransform [label="Linear
+(768 -> 512)", shape=box, style=filled, fillcolor=white];
+    
+    Concatenation [label="Concatenation
+(Transformed Text + Transformed Image)", shape=box, style=filled, fillcolor=white];
+    
+    subgraph cluster_3 {
+        style=filled;
+        color=lightblue;
+        node [style=filled, color=white];
+        FusionLayer;
+        label = "Fusion MLP";
+    }
+    
+    Residual [label="Residual Connection
+(Summed Text + Image Features)", shape=box, style=filled, fillcolor=white];
+    
+    subgraph cluster_2 {
+        style=filled;
+        color=lightblue;
+        node [style=filled, color=white];
+        FinalFusion -> Linear2 [label="ReLU & Dropout"];
+        Linear2 -> Output [label="ReLU & Dropout"];
+        label = "Final MLP Classifier";
+    }
+    
+    Input1 -> Roberta;
+    Input2 -> VisionModel;
+    
+    Roberta -> TextTransform;
+    VisionModel -> ImageTransform;
+    
+    TextTransform -> Concatenation;
+    ImageTransform -> Concatenation;
+    
+    Concatenation -> FusionLayer;
+    TextTransform -> Residual;
+    ImageTransform -> Residual;
+    Residual -> FinalFusion;
+    FusionLayer -> FinalFusion [label="ReLU & Dropout"]
+    
+    
+    FusionLayer [label="Fusion Layer
+(1024 -> 512)", shape=box, style=filled, fillcolor=white];
+    FinalFusion [label="Final Feature Fusion
+(512 + 512 -> 512)", shape=box, style=filled, fillcolor=white];
+    Linear2 [label="Linear
+(512 -> 6)", shape=box, style=filled, fillcolor=white];
+    Output [label="Output (6)", shape=ellipse, style=filled, fillcolor=lightgrey];
+}
+
+
+#unimodal
+digraph MLP {
+    rankdir=TB;
+    
+    Input1 [label="Input", shape=ellipse, style=filled, fillcolor=lightgrey];
+    
+    Model1 [label="Model\n(RoBERTa/CLIP)", shape=box, style=filled, fillcolor=white];
+
+    
+    subgraph cluster_1 {
+        style=filled;
+        color=lightgrey;
+        node [style=filled, color=white];
+        Model1;
+    }
+    
+    subgraph cluster_0 {
+        style=filled;
+        color=lightblue;
+        node [style=filled,color=white];
+        Linear1 -> Linear2 [label="ReLU & Dropout"];
+        Linear2 -> Output;
+        label = "MLP           ";
+    }
+    
+    Input1 -> Model1;
+    
+    Model1 -> Linear1;
+    
+    
+    Linear1 [label="Linear\n(1024 + 768 -> 512)", shape=box, style=filled, fillcolor=white];
+    Linear2 [label="Linear\n(512 -> 6)", shape=box, style=filled, fillcolor=white];
+    Output [label="Output", shape=ellipse, style=filled, fillcolor=lightgrey];
+}
+
+#multi
+digraph MLP {
+    rankdir=TB;
+    
+    Input1 [label="Text", shape=ellipse, style=filled, fillcolor=lightgrey];
+    Input2 [label="Image", shape=ellipse, style=filled, fillcolor=lightgrey];
+    
+    Roberta [label="RoBERTa", shape=box, style=filled, fillcolor=white];
+    VisionModel [label="CLIP", shape=box, style=filled, fillcolor=white];
+    
+    subgraph cluster_1 {
+        style=filled;
+        color=lightgrey;
+        node [style=filled, color=white];
+        Roberta;
+        VisionModel;
+    }
+    
+    subgraph cluster_0 {
+        style=filled;
+        color=lightblue;
+        node [style=filled,color=white];
+        Combined -> Linear1;
+        Linear1 -> Linear2[label="ReLU & Dropout"];
+        Linear2 -> Output;
+        label = "MLP";
+    }
+    
+    Input1 -> Roberta;
+    Input2 -> VisionModel;
+    
+    Roberta -> Combined;
+    VisionModel -> Combined;
+    
+    Combined [label="Concatenation\n(text embedding + image embedding)", shape=box, style=filled, fillcolor=white];
+    
+    Linear1 [label="Linear\n(1024 + 768 -> 512)", shape=box, style=filled, fillcolor=white];
+    Linear2 [label="Linear\n(512 -> 6)", shape=box, style=filled, fillcolor=white];
+    Output [label="Output", shape=ellipse, style=filled, fillcolor=lightgrey];
+}
