@@ -1,0 +1,81 @@
+\section{Introduction}
+
+Climate change is one of the most urgent global challenges, affecting environmental, economic, and social dimensions worldwide. In the digital era, social media platforms such as X (formerly Twitter), Facebook, and Instagram serve as critical arenas for climate change discussions, where information—and misinformation—spreads rapidly. Given the multimodal nature of these platforms, where text blends with images, memes, and infographics, it is essential to understand not only the emotions these elements convey but also how they trigger emotional responses in viewers.
+\newline
+
+However, analyzing these emotional dynamics in social media posts poses several challenges. Social media content is typically noisy and unlabelled, complicating both training and evaluation of machine learning models. Moreover, the multimodal aspect means that images can reinforce, contradict, or add nuance to accompanying text, creating emotional impacts not captured by text-only approaches. Consequently, the goal shifts from identifying an inherent or “built-in” emotion in the content to understanding how specific text–image combinations \emph{make people feel}.
+\newline
+
+This thesis aims to address these challenges by harnessing state-of-the-art (SOTA) text and image models. Specifically, it explores zero-shot classification and weakly supervised learning, including fine-tuning with soft labels, to infer how climate change–related tweets (which include images) may elicit emotional responses in viewers—even in the absence of explicit emotional labels. By examining how visual content shapes these emotional reactions, this work seeks to enhance our understanding of viewers’ emotional responses to climate change messages on social media.
+
+\section{Background and Motivation}
+
+This research builds upon the datasets introduced in \textit{Towards Understanding Climate Change Perceptions: A Social Media Dataset} by \citet{prasse2023towards}, which provide valuable resources for exploring climate discourse. The authors present two key datasets:
+
+\begin{enumerate}
+    \item \textbf{ClimateTV}: Comprising over 700,000 climate-related images from Twitter, collected between January 1, 2019 and December 31, 2019. The images carry labels derived from associated hashtags, providing a broad visual overview of climate discourse.
+    \item \textbf{ClimateCT}: A curated set of 1,000 climate-related Twitter images (January 1, 2019 – December 31, 2022), each manually annotated across five dimensions: (i) Animals, (ii) Climate Action, (iii) Consequences, (iv) Setting, and (v) Type. These annotations offer a more detailed look at the visual narratives in climate discussions.
+\end{enumerate}
+
+While ClimateCT includes extensive annotations, neither dataset was designed to capture how these images might influence viewers’ emotional states. This gap provides a fertile ground for experimenting with zero-shot and weakly supervised approaches, enabling an investigation into the emotional impact of climate-related posts without the need for manually curated emotion labels.
+\newline
+
+In the realm of text-based analysis, transformer models such as BERT \cite{DBLP:journals/corr/abs-1810-04805} have shown strong performance in encoding textual data for classification. More recent developments, including RoBERTa-based models (e.g., roberta-large-mnli) \cite{DBLP:journals/corr/abs-1907-11692}, demonstrate robust zero-shot capabilities, expanding the potential for emotion-focused analysis across diverse contexts and domains.
+\newline
+
+Conversely, analyzing emotional cues in images remains relatively underexplored. Convolutional neural network (CNN) architectures like ResNet \cite{he2015deepresiduallearningimage} and VGGNet \cite{simonyan2015deepconvolutionalnetworkslargescale} are commonly used for extracting image embeddings, which are then classified. More recently, vision transformers (ViTs) \cite{dosovitskiy2021imageworth16x16words} have sought to replicate the success of transformers in text-based tasks for image processing. CLIP \cite{radford2021learningtransferablevisualmodels}, trained on large sets of image–text pairs, pushes this further by enabling classification based on natural language descriptions—making it particularly suited for zero-shot prediction of viewer emotion.
+\newline
+
+In multimodal emotion classification, \citet{9920172} introduce the MUlti-Level SEmantic Reasoning network (MULSER), which performs fine-grained image–text emotion analysis. This aligns closely with our goal of exploring how combined textual and visual elements affect viewers’ emotional responses on social media. While MULSER emphasises fine-grained emotion classification, our research extends this approach by employing zero-shot and weakly supervised methods to estimate emotional responses to climate change-related tweets containing images. By integrating visual and textual cues, we aim to deepen our understanding of how social media audiences react emotionally to climate-related content.
+\newline
+
+Because the ClimateTV dataset provides rich textual (tweets and replies) and visual data but does not include explicit emotional labels, it presents an opportunity to test zero-shot or weakly supervised methodologies. By leveraging CLIP and similar architectures—alongside zero-shot text models for generating soft labels—we can investigate how likely people are to respond emotionally to climate-related tweets, thereby illuminating the role that visual media plays in shaping reactions to climate change messaging on social media.
+
+\section{Problem Statement}
+
+Despite increasing interest in how social media users perceive climate change, most existing approaches rely on labelled data and focus predominantly on text-based, polarity-oriented sentiment (e.g., positive vs. negative). Multimodal approaches, though promising, often assume access to large-scale labelled data for both text and images—an assumption that is impractical in many real-world scenarios.
+\newline
+
+The ClimateTV dataset highlights these challenges. Although it presents a wealth of text, replies, and images reflecting diverse perspectives, it does not include labels that capture the emotional effect on viewers. Understanding how such content influences emotional responses is critical for assessing the public’s engagement with climate change.
+\newline
+
+Additionally, current multimodal emotion analysis techniques often fail to account for the specific contexts and semantic richness of climate imagery, especially when combined with conversation threads (replies). This thesis aims to bridge that gap by addressing the following key questions:
+
+
+\begin{enumerate}
+    \item How can SOTA text and image models generate meaningful emotional insights for a climate change dataset with no existing emotion annotations—specifically, how does the content make viewers feel?
+    \item How can we refine these models to better capture multimodal cues and climate-specific contexts—especially in the absence of large-scale manual annotations—so that we can more accurately reflect how people emotionally respond to such content?
+\end{enumerate}
+
+To answer these questions, we explore zero-shot and weakly supervised learning techniques, followed by fine-tuning experiments using soft labels generated by the best-performing models.
+
+\section{Research Objectives and Approach}
+
+\subsection{Primary Research Question}
+
+\textit{How can state-of-the-art text and image models enhance our understanding of the \emph{emotional impact} (on viewers) of climate-related content on social media?}
+
+From this central question, we define the following objectives:
+
+\begin{itemize}
+    \item Evaluate and compare SOTA zero-shot models that can infer emotional responses in a dataset without explicit emotion labels, focusing on how the content makes viewers feel.
+    \item Implement and assess weakly supervised approaches for emotion detection that account for both textual and visual cues.
+    \item Fine-tune text, image, and multimodal models using soft labels generated by SOTA zero-shot methods to improve classification performance in terms of viewers’ emotional response.
+    \item Conduct error analysis and propose refinements to better capture how specific climate-related visuals affect public emotional reactions.
+\end{itemize}
+
+By systematically addressing these objectives, this thesis aims to demonstrate how SOTA models—combined with innovative inference and fine-tuning strategies—can provide deeper insights into the visual and textual cues shaping the emotional reception of climate change–related content on social media.
+
+\section{Thesis Structure}
+
+The thesis is structured as follows:
+
+\begin{itemize}
+    \item \textbf{Chapter 2 – Literature Review:} Provides an overview of prior research in text-based and image-based emotion analysis, highlighting gaps in zero-shot and weakly supervised methods.
+    \item \textbf{Chapter 3 – Research Methodology:} Details the dataset, preprocessing pipeline, and experimental protocols.
+    \item \textbf{Chapter 4 – Experimental Results:} Presents quantitative and qualitative findings, contrasting model performance under various conditions and includes detailed error analysis.
+    \item \textbf{Chapter 5 – Discussion:} Examines failure modes and proposes enhancements for improved emotion detection.
+    \item \textbf{Chapter 6 – Conclusion:} Summarises key takeaways.
+\end{itemize}
+
+By re-centering the analysis on emotional responses rather than traditional positive, negative, or neutral sentiment this thesis seeks to provide nuanced insights into how climate change-related posts make people feel, thereby offering a richer understanding of public engagement with climate discourse on social media.
