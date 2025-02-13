@@ -25,7 +25,7 @@
 \usepackage{listings}
 \usepackage{array}
 \renewcommand{\algorithmiccomment}[1]{\hfill\textit{// #1}}
-\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage[colorlinks,citecolor=Green]{hyperref} % you may change/remove the colors
 \usepackage{lipsum} % you do not need this
 
@@ -421,7 +421,7 @@ Experiment & \multicolumn{1}{c}{Test/Cosine\_Sim} & \multicolumn{1}{c}{Test/KL\_
 \begin{landscape}  % Rotate the table while allowing page breaks
 \begin{center}
 \begin{longtable}{p{4cm} *{7}{r}}  % Adjust column widths if needed
-\caption{Complete image experimental results}\label{tab:full_results}\\
+\caption{Complete image experimental results}\label{tab:full_results_image}\\
 \toprule
 Experiment & \multicolumn{1}{c}{Test/Cosine\_Sim} & \multicolumn{1}{c}{Test/KL\_Div} & \multicolumn{1}{c}{Test/MSE} & \multicolumn{1}{c}{Test/Cosine\_Sim\_Norm} & \multicolumn{1}{c}{Test/MSE\_Norm} & \multicolumn{1}{c}{Test/KL\_Div\_Norm} & \multicolumn{1}{c}{Score} \\
 \midrule
@@ -487,7 +487,7 @@ exp\_only\_clip\_lr5e-06\_drop0.5\_epochs2 & 0.7996 & 0.3583 & 0.0239 & 0.7996 &
 \begin{landscape}  % Rotate the table while allowing page breaks
 \begin{center}
 \begin{longtable}{p{4cm} *{7}{r}}  % Adjust column widths if needed
-\caption{Complete text experimental results}\label{tab:full_results}\\
+\caption{Complete text experimental results}\label{tab:full_results_text}\\
 \toprule
 Experiment & \multicolumn{1}{c}{Test/Cosine\_Sim} & \multicolumn{1}{c}{Test/KL\_Div} & \multicolumn{1}{c}{Test/MSE} & \multicolumn{1}{c}{Test/Cosine\_Sim\_Norm} & \multicolumn{1}{c}{Test/MSE\_Norm} & \multicolumn{1}{c}{Test/KL\_Div\_Norm} & \multicolumn{1}{c}{Score} \\
 \midrule
@@ -575,18 +575,16 @@ Erklärung rechtliche Folgen haben wird.
     \toprule
     Tool & Purpose & Where? & Useful? \\
     \midrule
-    ChatGPT & Rephrasing & Throughout & + \\
-    DeepL & Translation & Throughout & + \\
-    ResearchGPT & Summarization of related work & Sec.~\ref{sec:related_work_A} & - \\
-    Dall-E & Image generation & Figs.~2, 3 & ++ \\
-    GPT-4 & Code generation & functions.py & + \\
-    ChatGPT & Related work hallucination & Most of bibliography & ++ \\
+    GPT-4 & Rephrasing & Throughout & ++ \\
+    Deepseek-R1 & Summarization of related work & Chap.~\ref{ch:background} & + \\
+    GPT-4 & Code generation & For visualisations & ++ \\
+    GPT-4 & Latex table formatting & Throughout & ++ \\
     \bottomrule
   \end{tabularx}
 \end{center}
 
 \vspace{2cm}
 \noindent Unterschrift\\
-\noindent Mannheim, den XX.~XXXX 2024 \hfill
+\noindent Mannheim, den 14.02.2024 \hfill
 
 \end{document}

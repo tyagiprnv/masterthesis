@@ -63,9 +63,9 @@ Interestingly, the \emph{twitter-roberta-large-emotion-latest} model produced th
 \section{Weakly Supervised Learning Results}
 \subsection{Zero-shot Classification Boost with Self-training}
 
-We replicate the study conducted by \cite{gera_zero-shot_2022}, which investigates the impact of self-training on zero-shot entailment models. Table~\ref{tab:zero_shot} presents the accuracy results on three datasets: \textbf{AG}, \textbf{ISEAR}, and \textbf{ClimateTV}. The first two datasets, AG and ISEAR, were originally used in the reference study, while we extend the evaluation to ClimateTV dataset.
+We replicate the study conducted by \cite{gera_zero-shot_2022}, which investigates the impact of self-training on zero-shot entailment models. Table~\ref{tab:zero_shot} presents the accuracy results on three datasets: AG \cite{DBLP:journals/corr/ZhangZL15}, ISEAR \cite{Shao2015UniversalityVC}, and ClimateTV. The first two datasets, AG and ISEAR, were originally used in the reference study, while we extend the evaluation to ClimateTV dataset.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{lccc}
         \toprule
@@ -85,12 +85,12 @@ We replicate the study conducted by \cite{gera_zero-shot_2022}, which investigat
     \label{tab:zero_shot}
 \end{table}
 
-For each model—\textbf{BART}, \textbf{DeBERTa}, and \textbf{RoBERTa}—we report the baseline accuracy of the off-the-shelf zero-shot model, followed by its performance after two iterations of self-training. Consistent with the findings of \citet{gera_zero-shot_2022}, self-training substantially improves zero-shot classification performance across AG and ISEAR datasets, yielding gains of up to \textbf{12\%}. However, the effect varies when applied to the ClimateTV dataset.
+For each model BART, DeBERTa, and RoBERTa we report the baseline accuracy of the off-the-shelf zero-shot model, followed by its performance after two iterations of self-training. Consistent with the findings of \citet{gera_zero-shot_2022}, self-training substantially improves zero-shot classification performance across AG and ISEAR datasets, yielding gains of up to \textbf{12\%}. However, the effect varies when applied to the ClimateTV dataset.
 
 \begin{itemize}
-    \item \textbf{BART} shows a notable improvement on the ClimateTV dataset, increasing accuracy from \textbf{25.25\% to 34.34\%} after self-training.
-    \item \textbf{DeBERTa}, which already performs significantly better than the other models on ClimateTV, \textbf{does not benefit from self-training}, maintaining an accuracy of \textbf{46.46\%}.
-    \item \textbf{RoBERTa}, similar to DeBERTa, shows \textbf{no performance gain} on the ClimateTV dataset, with self-training yielding identical results.
+    \item BART shows a notable improvement on the ClimateTV dataset, increasing accuracy from \textbf{25.25\% to 34.34\%} after self-training.
+    \item DeBERTa, which already performs significantly better than the other models on ClimateTV, does not benefit from self-training, maintaining an accuracy of \textbf{46.46\%}.
+    \item RoBERTa, similar to DeBERTa, shows no performance gain on the ClimateTV dataset, with self-training yielding identical results.
 \end{itemize}
 
 These observations suggest that while self-training generally enhances zero-shot performance, its effectiveness may depend on the dataset characteristics. In particular, the ClimateTV dataset appears to present challenges that self-training does not overcome for DeBERTa and RoBERTa.
@@ -101,7 +101,7 @@ These observations suggest that while self-training generally enhances zero-shot
 To evaluate the impact of fine-tuning with loss re-weighting, we compare the model's performance on the manually annotated dataset before and after training. Table \ref{tab:per_class} provides per-class accuracy comparisons. Additionally, the classification reports in Table \ref{tab:classification_report} present a detailed breakdown of precision, recall, and F1-score for each emotion class.
 \newline
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{lcc}
         \hline
@@ -119,7 +119,7 @@ To evaluate the impact of fine-tuning with loss re-weighting, we compare the mod
     \label{tab:per_class}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{lccc|ccc}
         \hline
@@ -140,17 +140,16 @@ To evaluate the impact of fine-tuning with loss re-weighting, we compare the mod
     \label{tab:classification_report}
 \end{table}
 
-The results indicate a slight overall accuracy improvement of \textbf{3.03\%} after training. The per-class accuracy shows that \textbf{"anger" and "surprise" saw the most significant improvements}, while \textbf{"disgust" slightly degraded}. The confidence scores on average decreased by \textbf{0.0552}, suggesting that while the model made some better predictions, it became slightly less confident overall. The classification report highlights improved F1-scores for \textbf{anger, joy, and surprise}, while other classes remained stable.
-
-
+The results indicate a slight overall accuracy improvement of \textbf{3.03\%} after training. The per-class accuracy shows that "anger" and "surprise" saw the most significant improvements, while "disgust" slightly degraded. The confidence scores on average decreased by 0.0552, suggesting that while the model made some better predictions, it became slightly less confident overall. The classification report highlights improved F1-scores for anger, joy, and surprise, while other classes remained stable.
 
 
 \section{Text-Based Results}
 \label{sec:text-results}
 
-Table~\ref{tab:comparison} summarizes the results for August and February, showing significant improvements across all metrics. Our model outperforms the Baseline by 16.3\% in semantic alignment (Cosine Similarity), reduces distributional divergence by 58.5\% (KL Divergence), and lowers error magnitude by 43.4\% (MSE).
+Table~\ref{tab:comparison} summarizes the results for our best text-based experiment, showing significant improvements across all metrics.
+\newline
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccc|ccc}
@@ -169,21 +168,21 @@ Table~\ref{tab:comparison} summarizes the results for August and February, showi
     \label{tab:comparison}
 \end{table}
 
-Our model achieves a combined Cosine Similarity score of 0.8028, a \textbf{16.3\% improvement} over the Baseline ($\Delta = +0.1125$). Month-wise improvements are +17.0\% (August) and +16.6\% (February), showing stable performance over time.
+Our model achieves a combined Cosine Similarity score of 0.8028, a \textbf{16.3\%} improvement over the Baseline ($\Delta = +0.1125$). Month-wise improvements are +17.0\% (August) and +16.6\% (February), showing stable performance over time.
 \newline
 
 For KL Divergence, our model reduces distributional mismatch by \textbf{58.5\%} ($\Delta = 0.4898$), with the highest reduction in February (60.9\%). This indicates better probability distribution calibration.
 \newline
 
-The MSE results show a \textbf{43.4\% reduction} in error ($\Delta = 0.0178$), with consistent improvements of 43.6\% (August) and 44.1\% (February), confirming robust generalization.
+The MSE results show a \textbf{43.4\%} reduction in error ($\Delta = 0.0178$), with consistent improvements of 43.6\% (August) and 44.1\% (February), confirming robust generalization.
 
-% -------------------------------------------------------
+
 \section{Image-Based Results}
 \label{sec:image-results}
 
-Table~\ref{tab:comparison_img} presents the results for image-based experiments. Our model improves semantic alignment by 56.4\%, reduces distributional divergence by 72.2\%, and lowers error magnitude by 64.2\%.
+Table~\ref{tab:comparison_img} presents the results for our best image-based experiment.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccc|ccc}
@@ -202,21 +201,21 @@ Table~\ref{tab:comparison_img} presents the results for image-based experiments.
     \label{tab:comparison_img}
 \end{table}
 
-Our model achieves a combined Cosine Similarity of 0.7996, a \textbf{56.4\% improvement} over the Baseline ($\Delta = +0.2883$), with month-wise improvements of 61.5\% (August) and 42.6\% (February).
+Our model achieves a combined Cosine Similarity of 0.7996, a \textbf{56.4\%} improvement over the Baseline ($\Delta = +0.2883$), with month-wise improvements of 61.5\% (August) and 42.6\% (February).
 \newline
 
 For KL Divergence, our model reduces distributional mismatch by \textbf{72.2\%} ($\Delta = 0.9276$), with a 74.0\% reduction in August.
 \newline
 
-The MSE results show a \textbf{64.2\% reduction} in error ($\Delta = 0.0426$), with reductions of 65.4\% (August) and 58.8\% (February). Fine-tuning the CLIP encoder was crucial, as aggressive tuning without regularization led to overfitting.
+The MSE results show a \textbf{64.2\%} reduction in error ($\Delta = 0.0426$), with reductions of 65.4\% (August) and 58.8\% (February). Fine-tuning the CLIP encoder was crucial, as aggressive tuning without regularization led to overfitting.
 
 % -------------------------------------------------------
 \section{Multimodal Results}
 \label{sec:multimodal-results}
 
-Table~\ref{tab:comparison_multi} summarizes multimodal results, showing improvements of 14.4\% in semantic alignment, 44.0\% in distributional divergence, and 35.7\% in error magnitude.
+Table~\ref{tab:comparison_multi} summarizes results for our best multimodal experiment.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccc|ccc}
@@ -235,7 +234,7 @@ Table~\ref{tab:comparison_multi} summarizes multimodal results, showing improvem
     \label{tab:comparison_multi}
 \end{table}
 
-Our model achieves a combined Cosine Similarity of 0.8127, outperforming the Baseline by \textbf{14.4\%} ($\Delta = +0.1010$). Month-wise improvements show a 16.6\% gain in August and a 10.5\% gain in February, demonstrating stability across different time frames.
+Our model achieves a combined Cosine Similarity of 0.8127, outperforming the Baseline by \textbf{14.4\%} ($\Delta = +0.1010$). Month-wise improvements show a 16.6\% gain in August and a 10.5\% gain in February, demonstrating stability across different time frames. 
 \newline
 
 The KL Divergence reduction of \textbf{44.0\%} ($\Delta = 0.2605$) reflects a substantial enhancement in probability distribution alignment. The largest reduction occurs in August (45.8\%), closely followed by February (35.8\%), reinforcing the model's robustness in learning more calibrated probability distributions.
@@ -247,12 +246,12 @@ For MSE, our model achieves a \textbf{35.7\%} reduction ($\Delta = 0.0124$), red
 \section{Sensitivity to Datasets and Random Initialisation}
 \label{sec:dataset_seed_variations}
 
-All experiment configurations described in Section~\ref{sec:Experimental Setup} (e.g., hyperparameters, tuning strategies, and architectures) were \textbf{identically repeated} for \textbf{both datasets} (\textit{August} and \textit{February}) and for each of the \textbf{two random seeds} (\texttt{42} and \texttt{7}). 
-This setup ensures that any observed performance differences can be attributed primarily to \emph{dataset-specific} factors or \emph{random initialization}, rather than differences in training procedures.
+All experiment configurations described in Section~\ref{sec:Experimental Setup} (e.g., hyperparameters, tuning strategies, and architectures) were identically repeated for both datasets (August and February) and for each of the two random seeds (42 and 7). 
+This setup ensures that any observed performance differences can be attributed primarily to dataset-specific factors or random initialization, rather than differences in training procedures.
 
 \subsection{Comparison Across Datasets}
 \label{subsec:results_datasets}
-Table~\ref{tab:dataset_comparison} presents aggregated metrics for each modality (averaged over the two seeds) on the August vs.\ February data. We see that August data tends to yield higher performance across text-only, image-only, and multimodal models. This aligns with prior research on climate change discourse on social media, which indicates that August tends to experience heightened engagement and visual content related to climate activism and extreme weather events \cite{mooseder_social_2023}.
+Table~\ref{tab:dataset_comparison} presents aggregated metrics for all experiments for each modality (averaged over the two seeds) on the August vs.\ February data. We observe that models perform better on August data across text-only, image-only, and multimodal settings, likely due to the larger volume of available data during this period. This aligns with prior research on climate change discourse on social media, which suggests that August sees heightened engagement and an increase in visually rich content related to climate activism and extreme weather events \cite{mooseder_social_2023}.
 
 \begin{table}[ht]
     \centering
@@ -278,22 +277,23 @@ Table~\ref{tab:dataset_comparison} presents aggregated metrics for each modality
 
 \paragraph{Observations:}
 \begin{itemize}
-    \item \textbf{Consistent Patterns:} For every modality, performance is higher on August data in terms of Cosine Similarity and lower for error-based metrics (MSE, KL Divergence). This aligns with prior research showing that climate change discourse in August is more visually engaging, focusing on protests and environmental disasters \cite{mooseder_social_2023}.
+    \item \textbf{Performance Differences Across Modalities:} Across all modalities, August data consistently leads to higher Cosine Similarity scores and lower error-based metrics (MSE, KL Divergence). This suggests that discussions during this period exhibit stronger semantic consistency and clearer sentiment expression, possibly due to the prominence of visually impactful events such as environmental protests and disasters \cite{mooseder_social_2023}. 
+    \item \textbf{Seasonal Variations in Climate Change Discourse:} February discourse tends to center around scientific reports and policy discussions, which are often more technical and nuanced, potentially leading to greater variability in sentiment expression. In contrast, August discussions are more action-driven, dominated by activism and real-time extreme weather reporting, resulting in a more emotionally consistent signal \cite{mooseder_social_2023}. 
+    \item \textbf{Influence of Automated and Polarizing Content:} Prior research indicates that automated social media accounts (bots) have a stronger presence in August, amplifying both climate activism and skepticism. This heightened polarization likely contributes to increased engagement and a larger volume of available data, which in turn supports better model performance \cite{mooseder_social_2023}.
+    \item \textbf{Stable Ordering:} In both datasets, multimodal models outperform text-only, which in turn outperform image-only.
     \item \textbf{Statistical Significance:} We performed an independent samples t-test comparing performance on August vs.\ February data. 
     \begin{itemize}
     \item \textbf{Cosine Similarity:} August data shows significantly higher values ($t = 34.52$, $p < 0.0001$).
     \item \textbf{MSE:} August data exhibits significantly lower values ($t = -12.49$, $p < 0.0001$).
     \item \textbf{KL Divergence:} August data also demonstrates significantly lower values ($t = -10.40$, $p < 0.0001$).
     \end{itemize}
-    \item \textbf{Seasonal Discourse Variations:} Climate change discussions in February tend to focus on scientific reports and policy debates, whereas August discussions emphasize activism and extreme weather, leading to higher interaction and sentiment consistency \cite{mooseder_social_2023}.
-    \item \textbf{Bot Activity and Polarization:} Research indicates that automated social media accounts (bots) play a larger role in August, amplifying climate activism and scepticism, contributing to increased polarization and engagement and thus the volume of data \cite{mooseder_social_2023}.
-    \item \textbf{Stable Ordering:} In both datasets, multimodal models outperform text-only, which in turn outperform image-only.
 \end{itemize}
 
 
 
 \subsection{Effect of Random Initialisation}
 \label{subsec:results_seeds}
+To understand how initialization affects outcomes, each configuration was also trained using two random seeds. Table~\ref{tab:dataset_comparison_seed} presents aggregated metrics for each modality (averaged over both datasets) for seeds 42 vs.\ 7.
 
 \begin{table}[ht]
     \centering
@@ -316,7 +316,7 @@ Table~\ref{tab:dataset_comparison} presents aggregated metrics for each modality
     \label{tab:dataset_comparison_seed}
 \end{table}
 
-To check how initialization affects outcomes, each configuration was also trained using two random seeds. Table~\ref{tab:dataset_comparison_seed} presents aggregated metrics for each modality (averaged over both datasets) for seeds 42 vs.\ 7.
+
 
 
 \paragraph{Observations:}
@@ -326,7 +326,8 @@ To check how initialization affects outcomes, each configuration was also traine
 \end{itemize}
 
 \noindent
-In summary, training on August vs.\ February data produces larger, statistically significant performance differences than using different seeds. Although we only used two seeds, the minimal performance gap between them suggests that our primary findings are not unduly affected by random initialization. These results will be further discussed in Chapter~\ref{ch:discussion}.
+In summary, training on August vs.\ February data produces larger, statistically significant performance differences than using different seeds. Although we only used two seeds, the minimal performance gap between them suggests that our primary findings are not unduly affected by random initialization.
+
 
 \section{Comparative Analysis: Performance Metrics, Model Configurations, and Hyperparameter Impact}
 
@@ -338,7 +339,7 @@ This section provides a unified view of performance across text, image, and mult
 
 Table~\ref{tab:performance} summarizes the highest and lowest performers, revealing that multimodal approaches consistently outperform single-modality setups. 
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccccc}
@@ -351,6 +352,16 @@ Table~\ref{tab:performance} summarizes the highest and lowest performers, reveal
         RoBERTa-Base & 2.452 & 0.812 & 0.337 & 0.022 & 5e-6 & 0.3 & 2 & GELU, Frozen CLIP \\
         RoBERTa-Large & 2.450 & 0.811 & 0.339 & 0.023 & 1e-5 & 0.5 & 5 & GELU, Frozen \\
         \midrule
+        \multicolumn{9}{c}{\textbf{Top Performers (Single-Modality)}} \\
+        \midrule
+        RoBERTa-Large & 2.431 & 0.802 & 0.347 & 0.023 & 1e-5 & 0.3 & 10 & Text Only, Frozen \\
+        CLIP & 2.417 & 0.799 & 0.358 & 0.023 & 5e-6 & 0.5 & 2 & Image Only, Tuned \\
+        \midrule
+        \multicolumn{9}{c}{\textbf{Bottom Performers (Multimodal)}} \\
+        \midrule
+        RoBERTa-Large & 2.308 & 0.771 & 0.434 & 0.028 & 1e-5 & 0.3 & 5 & GELU \\
+        RoBERTa-Large & 2.303 & 0.768 & 0.436 & 0.028 & 1e-5 & 0.3 & 5 & Frozen CLIP \\
+        \midrule
         \multicolumn{9}{c}{\textbf{Bottom Performers (Single-Modality)}} \\
         \midrule
         RoBERTa-Large & 2.281 & 0.760 & 0.450 & 0.029 & 1e-5 & 0.3 & 10 & Text Only, Tuned \\
@@ -362,20 +373,30 @@ Table~\ref{tab:performance} summarizes the highest and lowest performers, reveal
     \label{tab:performance}
 \end{table}
 
+
 \subsubsection*{Key Observations from Table~\ref{tab:performance}}
 
+
 \begin{itemize}
-    \item \textbf{Multimodal Superiority}: All top performers combine RoBERTa (text) and CLIP (image) with partial freezing strategies (e.g., frozen RoBERTa, CLIP, or both). Their Cosine Similarity (0.811--0.813) surpasses single-modality models by 3--7\% (score difference: 6.9\% for text-only, 3.3\% for image-only).
-    \item \textbf{Balanced Regularization}: Top configurations use moderate learning rates (1e-5 or 5e-6) and dropout (0.3--0.5), achieving optimal trade-offs between capacity and generalization.
-    \item \textbf{Efficient Convergence}: Multimodal models converge within 2--5 epochs. Extending training to 10 epochs degrades tuned single-modality performance (e.g., text-only Cosine Similarity drops 3.5\%).
+    \item \textbf{Multimodal Superiority (on Average)}
+    The top multimodal models achieve higher cosine similarity scores (0.811, 0.812, and 0.813) compared to the bottom single-modality models (0.760 for text-only and 0.788 for image-only). However, the top-performing single-modality models (RoBERTa-Large text-only: 0.802 and CLIP image-only: 0.799) actually overlap with or slightly exceed the lower range of multimodal models (0.768 and 0.771 for the bottom multimodal models). This suggests that not all multimodal configurations are superior, and poor multimodal fusion strategies (e.g., inappropriate freezing/tuning combinations) can reduce performance below strong single-modality baselines. Despite this, the best multimodal models still consistently outperform their best single-modality counterparts, reinforcing the benefit of using both text and image data when optimized properly.
+
+    \item \textbf{Balanced Regularization}
+    The top multimodal models use moderate learning rates (1e-5 or 5e-6) and dropout values of 0.3 to 0.5. These settings achieve a strong balance between model capacity and generalization, leading to lower KL divergence and MSE. In contrast, the bottom multimodal models, with similar architectures but higher KL divergence and MSE, suggest that variations in regularization strategies (e.g., different freezing settings) impact performance.
+
+    \item \textbf{Efficient Convergence}
+    Multimodal models converge in 2–5 epochs while still achieving top-tier performance. The single-modality text-only model that remains frozen and trains for 10 epochs performs well (cosine similarity = 0.802). However, when fine-tuned for 10 epochs, the text-only model's cosine similarity drops to 0.760, a decrease of over 5\%. A similar trend is observed in image-only models, where longer training and fewer frozen layers lead to slight but notable drops in performance. This indicates that careful selection of epoch count and freezing/tuning strategies is particularly important for single-modality setups.
 \end{itemize}
+
+
+
 
 \subsection{Hyperparameter Impact: Text-Only Models}
 \label{subsec:text-hparams}
 
-Experiments on text-only RoBERTa models (Section~\ref{sec:finetuning}) reveal critical hyperparameter interactions:
+Experiments on text-only RoBERTa models reveal critical hyperparameter interactions:
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llccccccc}
@@ -400,7 +421,7 @@ Experiments on text-only RoBERTa models (Section~\ref{sec:finetuning}) reveal cr
 \end{table}
 
 
-\noindent \textbf{Key Trends}:
+\noindent \textbf{Key Trends from Table~\ref{tab:text-hparam-breakdown}}:
 \begin{itemize}
     \item \textbf{Freezing Encoders}: Frozen models outperform tuned counterparts by 3.7\% in score (2.4318 vs. 2.3455). Stability in pre-trained representations prevents overfitting, especially with longer training (10 epochs).
     \item \textbf{Learning Rate Sensitivity}: Optimal performance occurs at lr=1e-5 for frozen models. Lower rates (5e-6) require fewer epochs to match performance.
@@ -412,7 +433,7 @@ Experiments on text-only RoBERTa models (Section~\ref{sec:finetuning}) reveal cr
 
 Image-only CLIP models exhibit distinct hyperparameter dynamics compared to text:
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llccccccc}
@@ -441,7 +462,7 @@ Image-only CLIP models exhibit distinct hyperparameter dynamics compared to text
 
 
 
-\noindent \textbf{Key Trends}:
+\noindent \textbf{Key Trends from Table~\ref{tab:image-hparam-breakdown}}:
 \begin{itemize}
     \item \textbf{Tuned Efficiency}: Short training (2 epochs) with lr=5e-6 and dropout=0.5 yields peak performance (2.4174). Extending to 10 epochs reduces scores by 3.4\%.
     \item \textbf{Frozen Flexibility}: Frozen models achieve comparable scores (2.4173) but require higher learning rates (1e-5) and extended training (10 epochs).
@@ -461,7 +482,7 @@ Multimodal configurations demonstrate synergistic benefits from modality fusion:
 \toprule
 \textbf{Model} & \textbf{Optimizer} & \textbf{Learning Rate} & \textbf{Dropout} & \textbf{Epochs} & \textbf{Fusion/MLP} & \textbf{Tuning} & \textbf{CosineSim} $\uparrow$ \\
 \midrule
-\multirow{8}{*}{\textbf{RoBERTa-large}}  
+\multirow{8}{*}{\textbf{RoBERTa-large \& CLIP}}  
     & \multirow{6}{*}{AdamW}  
         & $1\text{e-}5$  & 0.5 & 5 & 3-Layer MLP & Both frozen & \textbf{0.8126} \\
     &   & $1\text{e-}5$  & 0.5 & 5 & GELU / 3-Layer MLP & Both frozen & 0.8114 \\
@@ -474,7 +495,7 @@ Multimodal configurations demonstrate synergistic benefits from modality fusion:
         & $5\text{e-}6$  & 0.5 & 2 & Residual fusion & - & 0.8064 \\
     &   & $1\text{e-}5$  & 0.3 & 5 & - & Tuned & 0.7712 \\
 \midrule
-\multirow{7}{*}{\textbf{RoBERTa-base}}  
+\multirow{7}{*}{\textbf{RoBERTa-base \& CLIP}}  
     & \multirow{4}{*}{AdamW}  
         & $1\text{e-}5$  & 0.5 & 5 & - & Tuned & 0.7679 \\
     &   & $1\text{e-}5$  & 0.5 & 5 & GELU / 3-Layer MLP & Tuned & 0.7725 \\
@@ -493,28 +514,37 @@ Multimodal configurations demonstrate synergistic benefits from modality fusion:
 \end{table}
 
 
-
-
-
-\noindent \textbf{Key Insights}:
+\noindent \textbf{Key Trends from Table~\ref{tab:multi-hparam-breakdown}}:
 \begin{itemize}
-    \item \textbf{Freezing Efficacy}: Fully frozen RoBERTa-Large and CLIP achieve the highest score (2.4539), emphasizing the value of preserving pre-trained features. Partial tuning (e.g., RoBERTa-Base with GELU) narrows the gap to 0.04\% (2.4522 vs. 2.4539).
+    \item \textbf{Freezing Efficacy}: Fully frozen RoBERTa-Large and CLIP achieve the highest cosine similarity score (0.8126), emphasizing the value of preserving pre-trained features. Partial tuning (e.g., RoBERTa-Base with GELU) narrows the gap to 0.13\% (0.8126 vs. 0.8115).
     \item \textbf{Architectural Adaptability}: RoBERTa-Base competes with RoBERTa-Large when paired with GELU activations and tuned layers, despite 55\% fewer parameters.
     \item \textbf{Dropout Stratification}: Larger models (RoBERTa-Large) require higher dropout (0.5), while Base variants perform optimally at 0.3.
     \item \textbf{Optimizer Robustness}: AdamW marginally outperforms Adam ($<0.5\%$ difference), suggesting optimizer choice is secondary to freezing and learning rate.
 \end{itemize}
 
+These insights highlight the importance of balancing freezing, dropout, and fusion strategies to maximize multimodal model efficiency.
+
 \subsection{Summary of Comparative Findings}
 
-The cross-modal analysis yields four principal conclusions:
 \begin{itemize}
-    \item \textbf{Multimodal Synergy}: Fusion of text and image encoders with partial freezing elevates scores by 3--7\% over single-modality models, achieving the highest alignment scores (Cosine Similarity $>0.81$).
-    \item \textbf{Modality-Specific Tuning}: Text models favour frozen encoders and moderate learning rates; image models benefit from brief tuning cycles; multimodal setups demand balanced regularization.
-    \item \textbf{Efficient Training}: Optimal epoch counts are modality-dependent: 2--5 for multimodal, $\le5$ for tuned single-modality, and $\le10$ for frozen single-modality.
-    \item \textbf{Parameter Efficiency}: Smaller architectures (RoBERTa-Base) can rival larger counterparts through activation function optimization (GELU) and targeted tuning.
+    \item \textbf{Multimodal Performance vs. Single-Modality}  \\
+    Across all experiments, the highest average cosine similarities (0.811--0.813) are achieved by well-optimized multimodal models. While this confirms the general benefit of combining text and image features, there are cases where strong single-modality models (e.g., RoBERTa-Large text-only at 0.802 or CLIP image-only at 0.799) can match or even exceed weaker multimodal configurations (0.768--0.771). In other words, merely blending modalities does not guarantee superior results; effective hyperparameter tuning (e.g., learning rate, dropout, freezing strategies) is essential. Nevertheless, the top-tier multimodal approaches maintain a decisive edge over the best purely text-based or image-based models.
+
+    \item \textbf{Importance of Freezing and Regularization}  \\
+    Freezing pre-trained encoders consistently shows notable benefits for both single- and multi-modal setups. By preserving robust representations, frozen models avoid overfitting during extended training (e.g., 10 epochs), producing up to a 3.7\% higher score compared to fully tuned counterparts in text-only experiments. Similarly, multimodal models that freeze both RoBERTa-Large and CLIP achieve the highest cosine similarity (0.8126). In contrast, excessive fine-tuning, especially over more epochs, tends to degrade performance for text-only and image-only models alike.
+
+    \item \textbf{Convergence Efficiency and Epoch Management}  \\
+    A consistent trend across text, image, and multimodal experiments is that peak performance often emerges within just 2--5 epochs. Notably, text-only models that remain frozen and train for 10 epochs can still perform well (cosine similarity = 0.802). However, extending to 10 epochs while fine-tuning leads to sharp declines (down to 0.760). Image-only experiments also show that short training (2 epochs) with a tuned approach and low learning rate (5e-6) yields top scores, whereas 10 epochs often result in 3--5\% performance drops. Early stopping and careful epoch management are therefore critical, particularly in single-modality contexts.
+
+    \item \textbf{Architectural and Optimizer Observations}  
+    \begin{itemize}
+        \item \textbf{Model Size and Dropout:} Larger architectures (e.g., RoBERTa-Large) typically need higher dropout (0.5) to stabilize training, whereas smaller ones (RoBERTa-Base) perform best with dropout around 0.3. Despite having fewer parameters, RoBERTa-Base can still match or closely approximate RoBERTa-Large’s performance if paired with effective activation functions (e.g., GELU) and partial tuning.
+        \item \textbf{Optimizer Choice:} Both Adam and AdamW yield comparable results (less than 0.5\% difference), indicating that while AdamW is marginally better in some setups, freezing strategies, learning rates, and dropout rates have a much larger overall impact on performance.
+    \end{itemize}
+
 \end{itemize}
 
-These findings underscore the necessity of modality-aware hyperparameter strategies. Chapter~\ref{ch:discussion} explores their theoretical implications and practical applications in depth.
+Overall, the findings emphasize that well-structured multimodal models, particularly those that freeze pre-trained encoders and employ moderate regularization, offer the highest cosine similarity scores, surpassing even the strongest text-only or image-only baselines. Hyperparameter selection (learning rate, dropout) and training procedures (epoch count, freezing vs. tuning) emerge as the most influential factors across all model types.
 
 
 
@@ -522,7 +552,7 @@ These findings underscore the necessity of modality-aware hyperparameter strateg
 \label{sec:error-analysis}
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/plot_1.png}
@@ -546,7 +576,7 @@ These findings underscore the necessity of modality-aware hyperparameter strateg
 
 Despite significant gains in distribution metrics (Tables~\ref{tab:comparison}--\ref{tab:comparison_multi}), our models (text-only, image-only, and multimodal) still struggle with several recurring error patterns. We classify these issues into three main categories in subsections~\ref{subsec:cross-modal}--\ref{subsec:class-level}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/confusion_matrix_baseline_text_dist.png}
@@ -556,14 +586,14 @@ Despite significant gains in distribution metrics (Tables~\ref{tab:comparison}--
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/confusion_matrix_best_text_dist.png}
-        \caption{Best Text Model.}
+        \caption{Our Text Model.}
         \label{fig:text-confusion-best}
     \end{subfigure}
     \caption{Confusion matrices for text models. Darker blues indicate higher prediction frequency.}
     \label{fig:text-confusion}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/confusion_matrix_baseline_image_dist.png}
@@ -573,14 +603,14 @@ Despite significant gains in distribution metrics (Tables~\ref{tab:comparison}--
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/confusion_matrix_best_image_dist.png}
-        \caption{Best Image Model.}
+        \caption{Our Image Model.}
         \label{fig:image-confusion-best}
     \end{subfigure}
     \caption{Confusion matrices for image-only models.}
     \label{fig:image-confusion}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/confusion_matrix_baseline_multi_dist.png}
@@ -590,7 +620,7 @@ Despite significant gains in distribution metrics (Tables~\ref{tab:comparison}--
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/confusion_matrix_best_multi_dist.png}
-        \caption{Best Multimodal.}
+        \caption{Our Multimodal.}
         \label{fig:multi-confusion-best}
     \end{subfigure}
     \caption{Multimodal confusion matrices.}
@@ -603,52 +633,50 @@ Despite significant gains in distribution metrics (Tables~\ref{tab:comparison}--
 Our experiments reveal three broad error trends shared across text, image, and multimodal models:
 
 \begin{itemize}
-    \item \textbf{Minority Class Collapse.} Rare emotions such as \emph{sadness} or \emph{fear} remain poorly recognized, with recall often below 15\%. Text models frequently confuse \emph{sadness} with \emph{surprise} or \emph{joy} (79\% of errors), while image models can fail to detect \emph{sadness} altogether (0\% recall). Even though Mean Squared Error (MSE) drops by 35--64\% for some rare classes, Figure~\ref{fig:mse-all} and the confusion matrices confirm these mistakes persist.
+    \item \textbf{Minority Class Collapse.} Rare emotions such as sadness or fear remain poorly recognized, with recall often below 15\%. Text models frequently confuse sadness with surprise or joy (79\% of errors) (Figure \ref{fig:text-confusion-best}), while image models can fail to detect sadness, disgust and anger altogether (0\% recall) (Figure \ref{fig:image-confusion-best}). Even though Mean Squared Error (MSE) drops by 35--64\% for some rare classes, Figure~\ref{fig:mse-all} and the confusion matrices confirm these mistakes persist.
 
-    \item \textbf{Modality-Specific Overfitting.} Optimizing for distribution metrics can harm instance-level accuracy. Text-based models “forget” \emph{anger} (only 2 out of 44 correct) when improving other metrics. Image-only models overcompensate for \emph{anger} bias, predicting \emph{surprise} almost exclusively (113/125 correct on \emph{surprise}, but 361 false positives). Multimodal fusion inherits both problems, absorbing the text model's \emph{sadness} mistakes (92\% misclassifications) and the image model's \emph{surprise} bias.
+    \item \textbf{Modality-Specific Overfitting.} Optimizing for distribution metrics can harm instance-level accuracy. Text-based models “forget” anger (only 2 out of 44 correct) (Figure \ref{fig:text-confusion-best}) when improving other metrics. Image-only models overcompensate for anger bias, predicting surprise almost exclusively (113/125 correct on surprise, but 361 false positives) (Figure \ref{fig:image-confusion-best}). Multimodal fusion inherits both problems, absorbing the text model's sadness mistakes (92\% misclassifications) (Figure \ref{fig:multi-confusion-best}) and the image model's surprise bias.
 
-    \item \textbf{Distribution-Instance Dissonance.} Large gains in cosine similarity (16--56\% improvement) can mask argmax errors. For example, \emph{joy} appears best predicted (162--219 correct in text models), but this partly stems from excessive \emph{joy} predictions (36--48\% of all outputs). The inherent trade-off between distributional alignment and per-instance fidelity remains a core challenge.
+    \item \textbf{Distribution-Instance Dissonance.} Large gains in cosine similarity (16--56\% improvement) can mask argmax errors. For example, joy appears best predicted (162--219 correct in text models), but this partly stems from excessive joy predictions (36--48\% of all outputs) (Figure \ref{fig:text-confusion-best}). The inherent trade-off between distributional alignment and per-instance fidelity remains a core challenge.
 \end{itemize}
 
 
 \subsection{Class-Level Analysis}
 \label{subsec:class-level}
 
-To better understand model misclassifications, we closely examine both the confusion matrices (Figures~\ref{fig:text-confusion}--\ref{fig:multi-confusion}) and the MSE trends (Figure~\ref{fig:mse-all}; also see the per-class MSE values in Tables~\ref{tab:comparison}--\ref{tab:comparison_multi}).
+To better understand model misclassifications, we closely examine both the confusion matrices (Figures~\ref{fig:text-confusion}--\ref{fig:multi-confusion}) and the MSE trends (Figure~\ref{fig:mse-all}).
 
 \paragraph{Text Model.} 
-From Table~\ref{tab:comparison}, the \emph{best text model} achieves notable MSE reductions for \emph{anger} (0.0224$\rightarrow$0.0170) and \emph{fear} (0.0290$\rightarrow$0.0121) compared to the baseline. However, it slightly increases MSE for \emph{sadness} (0.0137$\rightarrow$0.0162) and \emph{joy} (0.1138$\rightarrow$0.1172). This trade-off is also reflected in Figure~\ref{fig:text-confusion-best} (row 5: sadness), where only 3 of 18 sadness instances are correctly identified. The confusion matrix further reveals that \emph{anger} is often misclassified as \emph{surprise} (22 out of 44 anger instances).
+From Figure~\ref{fig:mse-text}, our best text model achieves notable MSE reductions for anger (0.0224$\rightarrow$0.0170) and fear (0.0290$\rightarrow$0.0121) compared to the baseline. However, it slightly increases MSE for sadness (0.0137$\rightarrow$0.0162) and joy (0.1138$\rightarrow$0.1172). This trade-off is also reflected in Figure~\ref{fig:text-confusion-best} (row 5: sadness), where only 4 of 21 sadness instances are correctly identified. The confusion matrix further reveals that anger is often misclassified as surprise (22 out of 44 anger instances).
 
 \paragraph{Image Model.} 
-For image-only models (Table~\ref{tab:comparison}), the \emph{best image model} significantly lowers MSE for \emph{joy} (0.1892$\rightarrow$0.1405) but worsens for \emph{surprise} (0.0350$\rightarrow$0.0424). In Figure~\ref{fig:image-confusion-best}, the majority of misclassifications (361 false positives) come from mistakenly predicting \emph{surprise}, which also damages \emph{disgust} recognition (79\% mislabeled as \emph{surprise}). Hence, while distribution metrics improve overall, the confusion matrix illustrates a strong one-label bias.
+For image-only models (Figure~\ref{fig:mse-img}), our best image model significantly lowers MSE for joy (0.1892$\rightarrow$0.1405) but worsens for surprise (0.0350$\rightarrow$0.0424). In Figure~\ref{fig:image-confusion-best}, the majority of misclassifications (361 false positives) come from mistakenly predicting surprise, which also damages disgust recognition (79\% mislabeled as surprise). Hence, while distribution metrics improve overall, the confusion matrix illustrates a strong one-label bias.
 
 \paragraph{Multimodal Model.}
-Finally, the multimodal model (Table~\ref{tab:comparison_multi}) shows mixed gains. The \emph{best multimodal} run achieves lower MSE for \emph{anger} (0.0278$\rightarrow$0.0120) and \emph{sadness} (0.0103$\rightarrow$0.0069) but raises MSE for \emph{surprise} (0.0287$\rightarrow$0.0525) and \emph{joy} (0.1070$\rightarrow$0.1514). The confusion matrix in Figure~\ref{fig:multi-confusion-best} confirms that a large portion of \emph{disgust} entries (61\%) are absorbed into \emph{surprise}, indicating the model struggles to differentiate negative emotions when trained to optimize overall distribution resemblance. Freezing text layers (to retain gains on \emph{fear} and \emph{anger}) can, unfortunately, lock in earlier classification mistakes, such as \emph{sadness} $\rightarrow$ \emph{joy} mislabels.
+Finally, the multimodal model (Figure~\ref{fig:mse-multi}) shows mixed gains. Our best multimodal run achieves lower MSE for anger (0.0278$\rightarrow$0.0120) and sadness (0.0103$\rightarrow$0.0069) but raises MSE for surprise (0.0287$\rightarrow$0.0525) and joy (0.1070$\rightarrow$0.1514). The confusion matrix in Figure~\ref{fig:multi-confusion-best} confirms that a large portion of disgust entries (61\%) are absorbed into surprise, indicating the model struggles to differentiate negative emotions when trained to optimize overall distribution resemblance. Freezing text layers (to retain gains on fear and anger) can, unfortunately, lock in earlier classification mistakes, such as sadness $\rightarrow$ joy mislabels.
 
 \subsubsection{Findings}
 
 \begin{itemize}
-    \item \textbf{Improvements in Rare Classes Are Fragile.} While MSE for \emph{anger} and \emph{fear} generally decreases, confusion matrices reveal significant misclassifications into \emph{surprise} or \emph{joy}. Minor distribution changes can drastically alter these minority-class predictions.
+    \item \textbf{Improvements in Rare Classes Are Fragile.} While MSE for anger and fear generally decreases, confusion matrices reveal significant misclassifications into surprise or joy. Minor distribution changes can drastically alter these minority-class predictions.
     
-    \item \textbf{Overproduction of Dominant Emotions.} In both the text and image models, \emph{surprise} and \emph{joy} are predicted too often (see darker cells in Figures~\ref{fig:text-confusion}--\ref{fig:image-confusion}). This skew helps match the global emotion distribution but harms per-instance accuracy.
+    \item \textbf{Overproduction of Dominant Emotions.} In both the text and image models, surprise and joy are predicted too often (see darker cells in Figures~\ref{fig:text-confusion}--\ref{fig:image-confusion}). This skew helps match the global emotion distribution but harms per-instance accuracy.
     
-    \item \textbf{Multimodal Fusion Conflicts.} Although combining text and image usually improves distribution metrics, the confusion matrices (Figures~\ref{fig:multi-confusion-best}) highlight how errors from each modality can reinforce each other rather than cancelling out. Notably, \emph{disgust} is frequently overridden by the image model’s \emph{surprise} bias, and \emph{sadness} from text is often lost to \emph{joy}.
+    \item \textbf{Multimodal Fusion Conflicts.} Although combining text and image usually improves distribution metrics, the confusion matrices (Figures~\ref{fig:multi-confusion-best}) highlight how errors from each modality can reinforce each other rather than cancelling out. Notably, disgust is frequently overridden by the image model’s surprise bias, and sadness from text is often lost to joy.
 \end{itemize}
 
 In summary, while distribution-level metrics show progress, real-use scenarios require robust, per-instance predictions. Our analysis of the confusion matrices and MSE trends underscores the persistent difficulty in balancing minority-class accuracy with global distribution alignment. Addressing these issues will likely require new architectures and training strategies (e.g., multi-task losses, calibration techniques, or explicit rare-class focus) rather than pure metric optimization.
 
 
 
-
-
 \section{Qualitative Analysis}
 
-In this section, we present a detailed qualitative analysis of our emotion distribution predictions. Alongside each tweet snippet and its aggregated distribution of replies (the ``gold" target), we also show samples of \emph{individual} reply predictions. This provides insight into how each user response contributes to the final averaged (aggregated) target distribution and how the model might struggle or excel in capturing these varied emotional signals.
+In this section, we present a detailed qualitative analysis of our emotion distribution predictions. Alongside each tweet snippet, its aggregated distribution of replies (the soft label), and our model predictions, we also show samples of individual reply predictions. This provides insight into how each user response contributes to the final averaged (aggregated) target distribution and how the model might struggle or excel in capturing these varied emotional signals.
 
 \vspace{1em}
 \subsection*{Poor Performance Cases}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.4\textwidth]{images/bad1.png} 
     \hfill
@@ -697,22 +725,22 @@ Links to the \#SkirmishEvents statements in multiple languages: [URLs]
 \end{aligned}
 \]
 
-Since only one user replied, the aggregated distribution essentially mirrors that single reply’s predicted emotions. The user’s response shows a dominant signal of \emph{fear} and \emph{sadness}:
+Since only one user replied, the aggregated distribution essentially mirrors that single reply’s predicted emotions. The user’s response shows a dominant signal of fear and sadness:
 
 \begin{quote}
 \emph{``Enlightenment at a time when the world began to turn towards fires, 
 it turns out that fires broke out in entire countries in sub-Saharan Africa...''}
 \end{quote}
 
-Despite this clear emotional focus (with nearly half the probability mass on \textit{fear}), the model’s final (multimodal) prediction spread its probabilities more evenly, assigning:
+Despite this clear emotional focus (with nearly half the probability mass on fear), the model’s final (multimodal) prediction spread its probabilities more evenly, assigning:
 
 \begin{itemize}
     \item \textit{Fear:} 27.0\% (vs.\ 48.8\% in replies),
     \item \textit{Sadness:} 18.3\% (vs.\ 30.5\%),
-    \item Extra probability mass on \textit{Anger} and \textit{Surprise}.
+    \item Extra probability mass on anger and surprise.
 \end{itemize}
 
-Notably, the text-only predictions (\textit{fear}: 15.3\%, \textit{sadness}: 16.3\%) and image-only predictions (\textit{fear}: 23.2\%, \textit{sadness}: 11.8\%) also dispersed their probability across other emotions like \textit{anger} and \textit{surprise}, failing to capture the strong peaks in \textit{fear} and \textit{sadness}. While the image-only model gave a slightly higher estimate for \textit{fear} (23.2\%), it still significantly underestimated both top emotions relative to the aggregated reply.
+Notably, the text-only predictions (fear: 15.3\%, sadness: 16.3\%) and image-only predictions (fear: 23.2\%, sadness: 11.8\%) also dispersed their probability across other emotions like anger and surprise, failing to capture the strong peaks in fear and sadness. While the image-only model gave a slightly higher estimate for fear (23.2\%), it still significantly underestimated both top emotions relative to the aggregated reply.
 \newline
 
 This mismatch highlights how \textbf{low-entropy replies} (favouring one or two emotions) can lead to larger KL divergence when the model avoids placing too much confidence in a single label. Our KL-based training objective often prevents the model from collapsing onto a single dominant peak—resulting in a more ``flattened” (high-entropy) prediction distribution.
@@ -760,19 +788,19 @@ GO (raised fist)(raised fist)(raised fist)(raised fist) \#Fridays4Future [URL]
 \end{aligned}
 \]
 
-There was only a single reply, predominantly expressing \textbf{surprise (62.4\%)}. The user’s short reaction suggests excitement or astonishment regarding the climate strike:
+There was only a single reply, predominantly expressing surprise (62.4\%). The user’s short reaction suggests excitement or astonishment regarding the climate strike:
 \begin{quote}
 \emph{``p.s.\ this really matters for [\dots]''}
 \end{quote}
 
-Our text-only model pushed more probability toward \textit{joy} and \textit{disgust}, while the image-only model improved the \textit{surprise} estimate (38.8\%) yet still fell below the gold distribution. Although \textit{surprise} remained the highest predicted emotion in the final multimodal model (around 46.5\%), it again did not reach the gold’s strong single peak (62.4\%). 
+Our text-only model pushed more probability toward joy and disgust, while the image-only model improved the surprise estimate (38.8\%) yet still fell below the gold distribution. Although surprise remained the highest predicted emotion in the final multimodal model (around 46.5\%), it again did not reach the gold’s strong single peak (62.4\%). 
 \newline
 
-As in Case A, our model’s final prediction showed a more flattened distribution. Although \textit{surprise} was still the highest predicted emotion, the model redistributed excess probability to \textit{fear} and \textit{anger}, increasing the KL divergence. Again, we see how a strong single-emotion reply can penalize the model’s natural tendency to avoid overconfidence.
+As in Case A, our model’s final prediction showed a more flattened distribution. Although surprise was still the highest predicted emotion, the model redistributed excess probability to fear and anger, increasing the KL divergence. Again, we see how a strong single-emotion reply can penalize the model’s natural tendency to avoid overconfidence.
 
 \subsection*{Good Performance Cases}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.4\textwidth]{images/good1.png} 
     \hfill
@@ -821,7 +849,7 @@ of what it was 20 years ago. \#climatechange \#climatecrisis \#dataviz
 \end{aligned}
 \]
 
-In total, there were \textit{several distinct replies}, reflecting a wide range of sentiments. Some expressed concern (\textit{fear, sadness}), others surprise or disgust at the data, while certain replies maintained an optimistic or grateful tone (\textit{joy}):
+In total, there were \textit{several distinct replies}, reflecting a wide range of sentiments. Some expressed concern (\textit{fear, sadness}), others surprise or disgust at the data, while certain replies maintained an optimistic or grateful tone (joy):
 
 \begin{quote}
 \emph{``Great work—even if it highlights a worrying trend,''} \\
@@ -832,7 +860,7 @@ In total, there were \textit{several distinct replies}, reflecting a wide range 
 This naturally yields a \textbf{higher entropy target distribution}, with each of the six emotions receiving non-trivial probability. Crucially, the KL-divergence loss encourages the model to match this spread. 
 \newline
 
-Overall, both the text-only and image-only predictions show varied emotion assignments; text-only dedicates a larger fraction to \textit{anger} and \textit{sadness}, while image-only shifts more heavily to \textit{fear} and \textit{surprise}. However, by combining both modalities, the multimodal system manages to produce a distribution that remains relatively balanced across the top four or five emotions. Indeed, our multimodal system successfully produced a more balanced distribution—resulting in lower KL divergence and better performance overall.
+Overall, both the text-only and image-only predictions show varied emotion assignments; text-only dedicates a larger fraction to anger and sadness, while image-only shifts more heavily to fear and surprise. However, by combining both modalities, the multimodal system manages to produce a distribution that remains relatively balanced across the top four or five emotions. Indeed, our multimodal system successfully produced a more balanced distribution—resulting in lower KL divergence and better performance overall.
 
 \subsubsection*{Case D: Tweet ID 1165556946180694016}
 
@@ -874,7 +902,7 @@ to participate in a climate change debate [URL]
 \end{aligned}
 \]
 
-Here, we see a diverse mixture of emotions across the replies—many users felt \emph{anger} or \emph{disgust} (finding the decision frustrating), a few expressed \emph{surprise}, and others found \textit{joy} or positivity in certain commentary:
+Here, we see a diverse mixture of emotions across the replies—many users felt anger or disgust (finding the decision frustrating), a few expressed surprise, and others found joy or positivity in certain commentary:
 
 \begin{quote}
 \emph{``This is stupid,''} \\
@@ -882,7 +910,7 @@ Here, we see a diverse mixture of emotions across the replies—many users felt 
 \emph{``I appreciate their effort in losing as many elections as possible...''}
 \end{quote}
 
-Since multiple replies contributed to the final distribution, it exhibited relatively high entropy. Our text-only predictions emphasized \textit{sadness} (19.2\%) more than the aggregated replies, while our image-only model gave heavier weight to \textit{fear} (18.2\%) and \textit{surprise} (22.6\%). Ultimately, the multimodal approach balanced these signals, producing a smoothed distribution with strong peaks in \textit{anger} (20.8\%) and \textit{joy} (25.8\%), aligning well with the diverse nature of user replies.
+Since multiple replies contributed to the final distribution, it exhibited relatively high entropy. Our text-only predictions emphasized sadness (19.2\%) more than the aggregated replies, while our image-only model gave heavier weight to fear (18.2\%) and surprise (22.6\%). Ultimately, the multimodal approach balanced these signals, producing a smoothed distribution with strong peaks in anger (20.8\%) and joy (25.8\%), aligning well with the diverse nature of user replies.
 \newline
 
 Hence, in cases of \textbf{diverse or high-entropy user replies}, the model excels at mimicking the broad emotional composition, lowering KL divergence.
@@ -898,7 +926,7 @@ While many replies are coherent, we also observed \emph{poorly written} or diffi
 \emph{``dnc no commentsame trough''} \\
 \end{quote}
 
-The model sometimes interprets these short, ambiguous, or grammatically unclear statements as expressing \textit{anger} or \textit{disgust}, based on certain keywords or negative connotations (e.g.\ ``no comment'' or random capital letters). Other times, the mention of a presumably serious topic (``energy production'') may inflate \textit{fear} or \textit{surprise}. When such replies are averaged with others, they can skew the final aggregated distribution and increase error—particularly if there are only a few total replies.
+The model sometimes interprets these short, ambiguous, or grammatically unclear statements as expressing anger or disgust, based on certain keywords or negative connotations (e.g.\ ``no comment'' or random capital letters). Other times, the mention of a presumably serious topic (``energy production'') may inflate fear or surprise. When such replies are averaged with others, they can skew the final aggregated distribution and increase error—particularly if there are only a few total replies.
 
 \bigskip
 

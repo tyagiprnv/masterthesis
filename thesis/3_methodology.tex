@@ -166,7 +166,7 @@ We benchmarked five pre-trained models chosen for either their focus on social m
 \subsubsection{Evaluation Dataset}
 We sampled \textbf{99 English replies} from our corpus, manually assigning a single ground-truth emotion label to each. The labels followed Ekman’s six basic emotions—\textit{anger}, \textit{disgust}, \textit{fear}, \textit{joy}, \textit{sadness}, and \textit{surprise}—and their distribution is shown in Table~\ref{tab:manual_label_distribution}.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{|c|c|}
         \hline
@@ -276,7 +276,7 @@ The resultant aggregated distributions serve as target supervisory signals for f
 \subsection{Label Mapping to Ekman’s Six Emotions}
 Since the CardiffNLP model originally yielded predictions for 11 emotion categories (e.g., \emph{love}, \emph{trust}, \emph{optimism}, \emph{anticipation}), we consolidated these into Ekman’s six basic emotions (\emph{anger, disgust, fear, joy, sadness, surprise}) to maintain consistency and interpretability. Table~\ref{tab:emotion_mapping} summarizes the mapping scheme, whereby categories such as \emph{love}, \emph{trust}, and \emph{optimism} are merged into \emph{joy}, and \emph{anticipation} is subsumed under \emph{surprise}. After merging, confidence scores for combined classes are normalized so that each distribution sums to 1.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{|c|l|}
         \hline
@@ -317,7 +317,7 @@ In both cases i.e. Unimodal (Text or Image) and Multimodal, we attach a standard
 \end{itemize}
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \begin{minipage}{0.49\textwidth}
         \centering
@@ -345,7 +345,7 @@ Uses a \textbf{CLIP ViT-L/14} encoder to extract image embeddings (768-dim), aga
 \subsubsection*{Multimodal Fusion (Figure~\ref{fig:arch2})}
 Combines text and image encoders from both unimodal settings in parallel. Text embeddings and image embeddings are concatenated. This fused representation (1792-dim) is passed to the standard projection head. For multimodal experiments, we tested many fine-tuned variations. The details are:
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[height=0.6\textheight]{images/residual.png}
     \caption{Multimodal Residual fusion architecture}
@@ -385,7 +385,7 @@ All experiments were conducted on data from two distinct time intervals (Februar
 
 A summary of the main architectural variations is given in Table~\ref{tab:architectural_variations}.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lccc}
