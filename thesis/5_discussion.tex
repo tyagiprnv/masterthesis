@@ -1,67 +1,94 @@
-In this chapter, we delve into the challenges and outcomes of emotion classification to social media data—specifically climate-related posts where emotional context can be nuanced and diverse. We begin by examining the baseline performance of various large language models, both domain-specific (CardiffNLP RoBERTa models) and general-purpose (e.g., DeBERTa-v3-large), highlighting how domain adaptation can yield measurable improvements in Exact Match and Top-3 Accuracy.
+\section{Overview}
+This chapter examines how zero-shot and fine-tuned models classify emotions in climate change discourse on Twitter, emphasizing the value of task-specific pretraining. Comparisons between zero-shot models and CardiffNLP RoBERTa model underscore that alignment with social media data significantly boosts performance. 
 \newline
 
-Next, we discuss the motivation for consolidating eleven initially predicted labels into Ekman’s six basic emotions (anger, fear, surprise, disgust, sadness, joy). This step enhances interpretability and consistency in a space often plagued by class imbalance and label ambiguity. We then present detailed experimental results showing that while distribution-level improvements (e.g., higher cosine similarity) are attainable through label aggregation and soft-label averaging, these gains do not necessarily translate to accurate per-instance predictions. Confusion matrices and Mean Squared Error (MSE) analyses reveal systemic biases across text-only, image-only, and multimodal models. Finally, we propose future directions—ranging from hybrid loss functions and dynamic fusion mechanisms to refined label aggregation methods—that aim to mitigate minority label collapse and address the tension between distribution alignment and real-world applicability.
+Beyond text-only methods, the chapter explores image-based and multimodal approaches. Visual cues often add valuable context such as protest imagery yet can introduce biases (e.g., an overemphasis on surprise). Evaluation metrics like cosine similarity, KL divergence, and MSE sometimes mask crucial misclassifications, underscoring the need for tailored measurement protocols. Overfitting remains a challenge, notably in fine-tuned and multimodal setups, prompting careful regularization and tuning strategies.
 \newline
 
-By considering these findings and open challenges, this chapter sets the stage for improving zero-shot and minimally supervised approaches in emotion classification. The goal is to inform both researchers and practitioners about the multifaceted nature of model performance, ensuring that future efforts balance distribution-level fidelity with fine-grained predictive accuracy.
+Finally, weakly supervised techniques, including self-training and loss re-weighting, yield modest gains but cannot fully resolve class imbalance or the subtleties of real-world emotional expression. The chapter concludes by proposing future research directions—improved label aggregation, multi-task training, dynamic fusion, and more robust evaluation—to address persistent gaps in classifying complex climate discourse.
 
 \section{Analysis of Findings}
-\subsection{Zero-shot performance}
+\subsection{Zero-Shot vs. Task-Specific Text Models}
 
-The results align with expectations, as the CardiffNLP RoBERTa models, pre-trained on Twitter data, outperformed general-purpose models in emotion classification. Their higher Exact Match and Top-3 Accuracy confirm the advantage of domain-specific pre-training for social media text.
+The CardiffNLP RoBERTa models, pre-trained on Twitter data for emotion classification, consistently outperformed general-purpose zero-shot models across evaluations, underscoring the critical role of task-specific pretraining. Notably, the RoBERTa-large variant emerged as the strongest performer when considering both quantitative metrics and confidence-based filtering. Its superior Exact Match (EM) and Top-3 Accuracy highlighted the advantages of domain-specific adaptation, particularly in capturing the linguistic nuances and informal tone inherent to social media text.
 \newline
 
-Applying a confidence threshold of 0.9 improved precision but significantly reduced the number of retained predictions. The DeBERTa-v3-large-Zeroshot model had the highest precision (72.73\%) but generated fewer confident predictions, indicating greater uncertainty. In contrast, CardiffNLP models retained the most high-confidence predictions (~63\%), demonstrating both reliability and coverage.
+A confidence threshold analysis (0.9) revealed a precision-coverage trade-off: while DeBERTa-v3-large-Zeroshot achieved the highest precision (72.73\%), it produced far fewer confident predictions, reflecting greater model uncertainty. In contrast, the CardiffNLP RoBERTa-large model retained 63\% of high-confidence predictions, striking an optimal balance between reliability and coverage. This dual evaluation which combines ranking metrics with confidence filtering solidified RoBERTa-large’s superiority, demonstrating that task-specific training is essential for robust performance in emotion classification.
 \newline
 
-These findings reinforce that while zero-shot models benefit from domain adaptation, moderate Exact Match scores (~65\%) suggest they still struggle with emotional nuances. Moreover, the best zero-shot model i.e. CardiffNLP RoBERTa-Large, predicted over 11 different labels, leading to inconsistencies in label distribution and interpretation. To address this, we consolidated the predictions into a more structured and theoretically grounded framework.
+The evaluation’s limited annotated dataset (99 samples) introduced challenges due to class imbalance (e.g., 33 anger vs. 10 surprise labels). Such skew risks inflating EM scores if models over-predict majority classes. To address this, Top-3 Accuracy and ranking metrics (Ranked Score, NDCG@3) were prioritized, enabling nuanced assessment of label-ranking accuracy in ambiguous cases. Despite these constraints, the CardiffNLP RoBERTa models maintained consistent performance, further validating their domain-specific training.
 
+\subsection{Experimental Results}
 
-\subsection{Experimental Results: Distribution vs. Instance-Level Accuracy}
+\subsubsection*{Text-Based Results}
+Table~\ref{tab:comparison} demonstrates that additional fine-tuning on climate-related data significantly improves the performance of CardiffNLP RoBERTa-Large in text-only scenarios. Comparing Cosine Similarity, KL Divergence, and MSE reveals that the refined model not only fits the overall distribution of emotions more precisely (indicated by large reductions in KL) but also achieves a substantial 43\% decrease in MSE. These results suggest that aligning the text encoder with climate-related language helps the model capture nuanced emotional cues, whether the tone is anger toward political inaction, fear of climate disasters, or joy in positive environmental developments.
+\newline
+
+\textbf{Use of the Same Model for Label Generation and Fine-Tuning.}
+It is worth noting that we employed the same CardiffNLP RoBERTa-Large model to both generate and later learn from the soft-label distributions. Specifically, we ran inference on each tweet’s replies, aggregated those multiple outputs into a single emotion probability distribution, and used that distribution as the supervisory target for fine-tuning on the original tweet text. This raises the potential concern of circular reasoning, where the model is trained to reproduce its own predictions. While we do not have definitive evidence to fully rule out this possibility, two aspects suggest that this approach may still be beneficial. First, the reliance on reply-level inference injects genuine diversity and contextual depth into the labelling process: the aggregated labels are not simply a single inference from the original tweet, but rather a composite of varied emotional responses within the conversation thread. Second, the process of domain-specific fine-tuning reshapes the model parameters to handle climate-related language and context, potentially allowing it to go beyond merely memorizing its own outputs. This is an aspect that could be explored further to better understand its implications. Despite these considerations, the substantial gains in KL Divergence and MSE (Table~\ref{tab:comparison}) suggest that this strategy effectively leverages the model’s strengths in emotion detection while adapting it to the nuanced climate domain.
+
+\subsubsection*{Image-Based Results}
+In Table~\ref{tab:comparison_img}, fine-tuning CLIP ViT-L/14 on climate-related images yields marked gains in matching annotated user emotions. Compared to the zero-shot baseline, Cosine Similarity increases by over 50\%, while MSE drops by more than 60\%. However, without proper regularization, fine-tuning risks overfitting: climate imagery often includes protest signs, infographics, or disaster photos that may lead the model to latch onto superficial visual cues (e.g., color or composition) rather than underlying emotional context. Techniques such as moderate learning rates and partial freezing proved essential to stabilize these improvements.
+
+\subsubsection*{Multimodal Results}
+Table~\ref{tab:comparison_multi} shows that combining textual and visual signals consistently outperforms single-modality approaches. Across Cosine Similarity, KL Divergence, and MSE, multimodal models better align with ground-truth emotion distributions. Month-wise analyses (e.g., August vs.\ February) demonstrate stable improvements, suggesting that text--image fusion can capture complementary information: language-based emotional content plus the visual impact (e.g., protest crowds, melting icebergs). Nonetheless, not all multimodal setups automatically surpassed the strongest unimodal baselines; careful tuning and fusion strategies were necessary to avoid overshadowing textual cues with dominant visual features (or vice versa).
+\newline
+
+Residual fusion with staggered unfreezing resulted in one of the lowest-performing multimodal approaches (Table \ref{tab:full_results}). The added complexity of residual connections may have hindered effective feature integration, amplifying discrepancies between text and image representations. Additionally, staggered unfreezing, intended to facilitate gradual adaptation, may have introduced instability, leading to overfitting on early-stage features before achieving a meaningful joint representation. These findings highlight the need for a more structured fusion and training strategy to balance multimodal contributions without excessive variance.
+\newline
+
+Despite this, the rationale for staggered unfreezing remains valid. CLIP, optimized for image-text alignment, may not fully capture emotional nuances, whereas RoBERTa is better suited for sentiment tasks. Unfreezing CLIP earlier allows image features to better align with the emotional space of text while keeping RoBERTa frozen longer preserves its strong generalization. However, unfreezing CLIP too soon may have destabilized multimodal alignment, while sequential fine-tuning may have led to suboptimal convergence. Future work could explore adaptive fine-tuning schedules to mitigate these issues while preserving the intended benefits.
 
 \subsubsection*{Label Aggregation and Distribution Flattening}
-The manual mapping of emotions (e.g., merging love, optimism, and trust into joy) introduced semantic ambiguity, as evidenced by the confusion matrices (Figures \ref{fig:text-confusion}--\ref{fig:multi-confusion}). For instance:
+The manual mapping of emotions (e.g., merging love, optimism, and trust into a single joy category) introduced semantic ambiguity, as evidenced by the confusion matrices in Figures~\ref{fig:text-confusion}--\ref{fig:multi-confusion}. Two main issues emerged:
+\begin{itemize}
+    \item \textbf{Overprediction of merged classes:} Joy and surprise (each absorbing multiple original labels) dominated predictions. In the best text-only model, joy had 162 correct predictions but also 149 false positives, sometimes misclassifying anger/sadness as joy. Qualitative analysis highlights this confusion: in Case~B, a tweet about climate strikes elicited replies dominated by surprise (62.4\%), but the model redistributed probabilities to fear and anger (Figure~\ref{fig:bad_cases}), conflating semantically distinct emotions. Likewise, surprise (merged with anticipation) was overpredicted for anger (22/44 instances) and sadness (43/83).
+    \item \textbf{Minority class collapse:} Rare emotions such as fear and sadness suffered catastrophic recall ($<10\%$ in the best multimodal model), with fear often collapsing into surprise or joy. For instance, in Case~A (Figure~\ref{fig:bad_cases}), a reply explicitly describing wildfires in sub-Saharan Africa as ``fires broke out in entire countries'' was assigned only 27\% probability of fear (less than half its ground truth of 48.8\%), with the excess probability allocated to surprise and anger. Persistently low MSE values for sadness (0.0069--0.0162) and fear (0.0120--0.0293) indicate the model minimized their contributions by predicting near-zero probabilities.
+\end{itemize}
+
+Using KL divergence as the loss function exacerbated these issues by emphasizing smoothness across the distribution rather than per-class accuracy. In Case~B (Figure~\ref{fig:bad_cases}), the model's prediction for a reply expressing 62.4\% surprise was flattened to 46.5\%, with the remainder assigned to unrelated classes like fear and anger. Averaging labels across replies also diluted target distributions, discouraging confident predictions for these minority classes.
+
+\subsubsection*{Qualitative Analysis}
+Detailed examples (Section~\ref{sec:qualitative}) reveal how different reply entropies affect model performance:
+\begin{itemize}
+    \item \textbf{High-entropy replies:} When users express a mixture of emotions, the model performs better because the training objective anticipates broad distributions.
+    \item \textbf{Low-entropy replies:} When most users converge on one emotion, the model typically underestimates the true peak, hesitating to allocate very high probability to a single label.
+\end{itemize}
+Additionally, noisy or ambiguous replies (e.g., those containing slang or incomplete sentences) can skew distributional predictions, particularly when the total number of replies is small. This underscores the importance of stringent data filtering and text-cleaning strategies in real-world applications.
 \newline
 
-\textbf{Overprediction of Merged Classes}: joy and surprise (which absorbed multiple original labels) dominated predictions. For our best text-only model, joy had 162 correct predictions but 149 false positives (e.g., anger/sadness misclassified as joy). Qualitative examples highlight this confusion: a tweet about climate strikes (Case B) elicited replies dominated by surprise (62.4\%), but the model redistributed probabilities to fear and anger (Figure \ref{fig:bad_cases}), conflating semantically distinct emotions. Similarly, surprise (merged with anticipation) was overpredicted for anger (22/44 instances) and sadness (43/83).
-\newline
-
-\textbf{Minority Class Collapse}: Rare emotions like fear and sadness suffered catastrophic recall ($<10\%$ in our best multimodal model), with fear predictions often collapsing into surprise or joy. For example, in Case A (Figure \ref{fig:bad_cases}), a reply explicitly describing wildfires in sub-Saharan Africa as “fires broke out in entire countries” was assigned only 27\% probability to fear—half the ground truth value (48.8\%)—with excess mass allocated to surprise and anger. The MSE values for sadness (0.0069–0.0162) and fear (0.0120–0.0293) were consistently low, suggesting the model learned to minimize their contributions to the loss by predicting near-zero probabilities.
-\newline
-
-The fine-tuning setup with KL divergence loss exacerbated this by prioritizing smooth, distribution-wide fidelity over per-class accuracy. Case B (Figure \ref{fig:bad_cases}) exemplifies this: the model’s prediction for a reply expressing 62.4\% surprise was flattened to 46.5\%, with the remaining probability spread across unrelated classes like fear and anger. Averaging labels across replies further flattened the target distributions, incentivizing models to avoid confident predictions for minority classes.
-
-\subsubsection*{Modality-Specific Biases and Error Propagation}
-The MSE tables highlight modality-specific weaknesses:
-\newline
-
-\textbf{Text Models}: Achieved the lowest anger MSE (0.0169 vs. baseline 0.0224) but failed to classify anger instances (2/44 correct in our best text-only model). Case D illustrates this: while textual cues like “This is stupid” (expressing anger toward political decisions) were present, the text model conflated anger with disgust due to overlapping lexicon.
-\newline
-
-\textbf{Image Models}: Overpredicted surprise (361 false positives), likely due to CLIP’s bias toward visually salient cues. In Case C (Figure \ref{fig:good_cases}), the Arctic ice melt graph image drove surprise overprediction (46.5\%) despite replies emphasizing fear—a disconnect between visual salience and textual sentiment. 
-\newline
-
-\textbf{Multimodal Fusion}: While our best multimodal model reduced anger MSE (0.0120 vs. baseline 0.0278), confusion matrices reveal it inherited text’s overprediction of surprise. Case C demonstrates this: the fusion model assigned 27.7\% probability to surprise (matching the aggregated replies) but misclassified fear (14.8\% vs. 27.7\% ground truth), reflecting unresolved cross-modal conflicts.
+\noindent
+MSE values reveal modality-specific weaknesses:
+\begin{itemize}
+    \item \textbf{Text models:} Achieved the lowest anger MSE (0.0169 vs.\ 0.0224 baseline) but often missed anger instances (only 2/44 correctly identified). In Case~D, the text model conflated anger (``This is stupid'') with disgust due to overlapping vocabulary, despite clear textual cues.
+    \item \textbf{Image models:} Overpredicted surprise (361 false positives), likely due to CLIP's bias toward visually salient cues. In Case~C (Figure~\ref{fig:good_cases}), an Arctic ice melt graph caused overestimation of surprise (46.5\%), even though replies emphasized fear, revealing a mismatch between visual salience and textual sentiment.
+    \item \textbf{Multimodal fusion:} Although the best multimodal model reduced anger MSE (0.0120 vs.\ 0.0278), confusion matrices indicate it inherited text models' tendency to overpredict surprise. In Case~C, the fusion model assigned 27.7\% probability to surprise (matching aggregated replies) but missed the correct intensity of fear (14.8\% vs.\ 27.7\% ground truth), highlighting lingering cross-modal conflicts.
+\end{itemize}
 
 \subsubsection*{Metric Misalignment and Practical Implications}
-The discrepancy between cosine similarity (aggregate distribution alignment) and confusion matrices (instance-level errors) raises questions about metric suitability:
-\newline
+Discrepancies between cosine similarity (aggregate distribution alignment) and confusion matrices (instance-level errors) raise questions about metric suitability:
+\begin{itemize}
+    \item \textbf{Cosine Similarity} rewards distributional shape matching but can mask severe misclassifications. In Case~C, the model attained high cosine similarity by balancing joy, surprise, and fear proportions, yet failed to identify the true magnitude of fear (14.8\% vs.\ 27.7\%).
+    \item \textbf{MSE} penalizes large deviations yet remains insensitive to label confusion. In Case~D, anger and disgust were both predicted at high probabilities, leading to low MSE despite critical misclassification.
+\end{itemize}
 
-\textbf{Cosine Similarity} rewards global shape matching but masks critical misclassifications. Case C exemplifies this: high cosine similarity was achieved by matching the spread of joy, surprise, and fear, but the model failed to detect the true intensity of fear (14.8\% vs. 27.7\%).
-\newline
-
-\textbf{MSE} penalizes large deviations but is insensitive to class swaps. In Case D, the model’s confusion between anger and disgust (both high-probability classes) resulted in low MSE despite misclassifications critical for tracking public sentiment.
 
 \subsubsection*{Overfitting and Generalization Trends}
-The observed train and validation loss curves further confirm the overfitting tendency of tuned models as shown in Tables (\ref{tab:text-hparam-breakdown}--\ref{tab:multi-hparam-breakdown}). Typically, when models are tuned, the training loss decreases to very low values, whereas frozen models exhibit a much higher loss that decreases more slowly. The validation loss curve shows the opposite effect, reinforcing the hypothesis that tuning leads to overfitting. For a detailed visualization of these trends, refer to the loss curve images in the Appendix chapter \ref{app:losses}.
+Train and validation loss curves (Tables~\ref{tab:text-hparam-breakdown}--\ref{tab:multi-hparam-breakdown}) confirm the tendency of tuned models to overfit. While their training losses quickly decrease to very low levels, frozen models typically exhibit higher, more gradually declining losses. Conversely, validation losses often rise for tuned models, reinforcing the overfitting hypothesis. The Appendix (Chapter~\ref{app:losses}) provides plots of these loss curves.
 \newline
 
-For real-world applications (e.g., tracking anger in crisis responses), these metrics poorly reflect operational needs. A model with high cosine similarity could still fail to detect critical emotions.
+
+\subsection{Weakly Supervised Learning}
+\subsubsection*{Zero-Shot Classification Boost with Self-training}
+In replicating the study from \citet{gera_zero-shot_2022} (Table \ref{tab:zero_shot}), self-training provided consistent improvements on classic datasets (AG, ISEAR), demonstrating that iterative pseudo-labelling can refine zero-shot entailment models. These gains, however, did not universally extend to the new ClimateTV dataset. While BART benefited significantly (up to +9.1\% on ClimateTV), DeBERTa and RoBERTa saw no improvement or plateaued performance. This discrepancy suggests that the domain-specific complexity of climate change discourse, potentially involving technical terms, political nuances, or varied emotional expressions, poses challenges that self-training alone may not overcome for certain architectures.
+
+\subsubsection*{Loss Re-weighting}
+Fine-tuning with loss re-weighting (Table \ref{tab:per_class} and \ref{tab:classification_report}) yielded a modest global accuracy improvement (+3.03\%). Classes such as anger and surprise experienced the most benefit, reflecting that these classes can be bolstered by redistributing gradient emphasis away from dominant categories like joy. However, some classes like disgust deteriorated, highlighting that re-weighting can inadvertently downplay a minority class if it is not carefully calibrated. Additionally, the confidence of predictions dropped slightly on average, indicating that while the model made more correct classifications for certain labels, it became less certain overall, likely a symptom of a more evenly distributed training focus among various classes.
+
 
 
 \section{Future Directions}
-To address the identified limitations, we propose six research directions combining methodological innovation with rigorous evaluation:
+To address the identified limitations, we propose research directions combining methodological innovation with rigorous evaluation:
 
 \begin{itemize}
     \item \textbf{Hybrid and Weighted Loss Functions}
@@ -73,10 +100,10 @@ To address the identified limitations, we propose six research directions combin
         \end{equation}
     \end{itemize}
     
-    \item \textbf{Refined Label Generation and Aggregation}
+    \item \textbf{Refined Label Aggregation}
     \begin{itemize}
-        \item \textbf{Why}: Relying solely on zero-shot models for soft labels can propagate upstream biases and simple aggregation strategies like averaging can magnify them (e.g., merging anticipation and surprise).
-        \item \textbf{How}: Consider more nuanced label aggregation (e.g., attention-weighted merging) to preserve emotional specificity, or incorporate partial human labeling to calibrate and refine zero-shot predictions.
+        \item \textbf{Why}: Relying solely on soft labels generated from pre-trained models can propagate biases and simple aggregation strategies like averaging can magnify them (e.g., merging anticipation and surprise).
+        \item \textbf{How}: Consider more nuanced label aggregation (e.g., attention-weighted merging) to preserve emotional specificity, or incorporate partial human labelling to calibrate and refine predictions.
     \end{itemize}
     
     \item \textbf{Multi-Task and Disentangled Training}
@@ -99,15 +126,9 @@ To address the identified limitations, we propose six research directions combin
         \item \textbf{Why}: Metrics that only measure distribution alignment can mask performance on minority classes and overestimate real-world suitability.
         \item \textbf{How}: Pair distribution-based metrics (KL divergence, Earth Mover’s Distance) with per-class indicators (macro-F1) to surface critical performance gaps.
     \end{itemize}
-    
-    \item \textbf{Metadata and Bias Mitigation}
-    \begin{itemize}
-        \item \textbf{Why}: Zero-shot models may reflect cultural or demographic biases in their pretrained distributions.
-        \item \textbf{How}: Incorporate metadata (e.g., annotator demographics or domain context) when available, to model and mitigate hidden biases within soft-label predictions.
-    \end{itemize}
 \end{itemize}
 
-By coupling zero-shot label generation with carefully chosen loss functions, gating strategies, and evaluation frameworks, future research can reduce the risk of "flattened" distributions and minority label collapse. This holistic approach is pivotal for modelling real-world emotional complexity, ensuring that both distribution-level and instance-level performance remains robust—despite the challenges of working with fully unlabelled datasets.
+By coupling label generation with carefully chosen loss functions, gating strategies, and evaluation frameworks, future research can reduce the risk of "flattened" distributions and minority label collapse. This approach is pivotal for modelling real-world emotional complexity, ensuring that both distribution-level and instance-level performance remains robust, despite the challenges of working with fully unlabelled datasets.
 
 
 

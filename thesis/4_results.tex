@@ -1,16 +1,25 @@
-\section{Zero-Shot Experimentation Results}
+\section{Overview}  
+This chapter provides a comprehensive evaluation of the climate change emotion classification pipeline, covering zero-shot baselines, fine-tuned text models, image models, and multimodal models. The analysis begins with benchmarking several pre-trained language models to identify the strongest text-based baseline. Fine-tuning, particularly when guided by soft label distributions, is shown to significantly enhance performance across distribution-oriented metrics such as Cosine Similarity, KL Divergence, and MSE. A deeper dive into text-only, image-only, and multimodal approaches follows, highlighting the impact of modality fusion on performance, along with key considerations in hyperparameter tuning and encoder-freezing strategies.  
+\newline  
 
-This section presents the performance of five zero-shot models in predicting emotion labels for climate change discourse on social media. Each model’s predictions were evaluated against an annotated subset of 99 English replies, using Exact Match (EM), Top-3 Accuracy, Ranked Score, and NDCG@3 as performance metrics.
+Model sensitivity to dataset sizes is also examined, comparing tweets from August and February. Results indicate that data volume has a more pronounced effect on performance than random initialization. A comparative analysis of hyperparameters further reveals the critical influence of learning rate, dropout, epoch count, and encoder-freezing strategies on each modality’s results.  
+\newline  
 
-\subsection{Model Performance Overview}
+To provide additional context for these numerical findings, the chapter concludes with an error analysis and a qualitative examination of specific tweets. The discussion highlights challenges in predicting minority emotions such as sadness and disgust, the tendency to overproduce dominant categories like surprise and joy, and difficulties in capturing low-entropy reply distributions. Finally, results from a weakly supervised self-training approach, effective on certain benchmark datasets but yielding inconsistent benefits in this domain, underscore the complexity of real-world climate change discourse.
+
+\section{Benchmarking Zero-Shot and Task-Specific Text Models}
+
+This section presents the performance of five pre-trained text models in predicting emotion labels for climate change discourse on social media. Each model’s predictions were evaluated against an annotated subset of 99 English replies, using Exact Match (EM), Top-3 Accuracy, Ranked Score, and NDCG@3 as performance metrics.
+
+\subsection{Model Performance}
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.5\linewidth, height=0.34\textheight]{images/model_comp1.png}
-    \caption{Performance comparison of zero-shot models based on key evaluation metrics.}
+    \caption{Primary Evaluation: Performance comparison of text models based on key evaluation metrics.}
     \label{fig:model-comp}
 \end{figure}
 
-Table~\ref{tab:model-results} and Figure~\ref{fig:model-comp} summarize the results. The CardiffNLP \emph{twitter-roberta-large-emotion-latest} model achieved the highest scores across most metrics, with an Exact Match of 0.659, a Top-3 Accuracy of 0.859, a Ranked Score of 0.749, and an NDCG@3 of 0.778. In comparison, the other CardiffNLP model (\emph{twitter-roberta-base-emotion-latest}) also performed well, outperforming the more general-purpose BART-large-MNLI and DeBERTa-based models in all metrics.
+Table~\ref{tab:model-results} and Figure~\ref{fig:model-comp} summarize the results. The CardiffNLP RoBERTa-Large, model achieved the highest scores across most metrics, with an Exact Match of 0.659, a Top-3 Accuracy of 0.859, a Ranked Score of 0.749, and an NDCG@3 of 0.778. In comparison, the CardiffNLP RoBERTa-base, also performed well, outperforming the more general-purpose BART-large-MNLI and DeBERTa-based models in all metrics.
 \newline
 
 \begin{table}[htbp]
@@ -28,7 +37,7 @@ Table~\ref{tab:model-results} and Figure~\ref{fig:model-comp} summarize the resu
         \bottomrule
     \end{tabular}%
     }
-    \caption{Performance of the zero-shot models on the annotated subset ($n=99$).}
+    \caption{Primary Evaluation: Performance of the text models on the annotated subset ($n=99$).}
     \label{tab:model-results}
 \end{table}
 
@@ -52,98 +61,17 @@ A confidence threshold of 0.9 was applied to refine the model outputs. Table~\re
         DeBERTa-v3-large-Zeroshot & 24 & 33 & 72.73 \\
         \bottomrule
     \end{tabular}
-    \caption{Performance of the zero-shot models on the annotated subset ($n=99$) with confidence score $>$ 0.9.}
+    \caption{Secondary Evaluation: Performance of the zero-shot models on the annotated subset ($n=99$) with confidence score $>$ 0.9.}
     \label{tab:confidence-filtering}
 \end{table}
 
-Interestingly, the \emph{twitter-roberta-large-emotion-latest} model produced the largest number of high-confidence predictions, although its overall precision at these high-confidence levels was slightly lower than that of BART-large-MNLI and DeBERTa-v3-large-Zeroshot. In contrast, DeBERTa-v3-large-Zeroshot had fewer total high-confidence predictions, indicating that it was more conservative in assigning high confidence but achieved a higher precision among those it did classify confidently.
-
-
-
-\section{Weakly Supervised Learning Results}
-\subsection{Zero-shot Classification Boost with Self-training}
-
-We replicate the study conducted by \cite{gera_zero-shot_2022}, which investigates the impact of self-training on zero-shot entailment models. Table~\ref{tab:zero_shot} presents the accuracy results on three datasets: AG \cite{DBLP:journals/corr/ZhangZL15}, ISEAR \cite{Shao2015UniversalityVC}, and ClimateTV. The first two datasets, AG and ISEAR, were originally used in the reference study, while we extend the evaluation to ClimateTV dataset.
-
-\begin{table}[ht]
-    \centering
-    \begin{tabular}{lccc}
-        \toprule
-        Model & AG  & ISEAR & ClimateTV \\
-        \midrule
-        BART & 66.2 & 56.0 & \textbf{25.25} \\
-        +Self-training & 74.2 & 65.3 & \textbf{34.34} \\
-        \midrule
-        DeBERTa & 73.2 & 58.5 & \textbf{46.46} \\
-        +Self-training & 81.4 & 59.5 & \textbf{46.46} \\
-        \midrule
-        RoBERTa & 62.4 & 52.0 & \textbf{32.32} \\
-        +Self-training & 76.5 & 56.7 & \textbf{32.32} \\
-        \bottomrule
-    \end{tabular}
-    \caption{Zero-shot classification accuracy of entailment models. For each zero-shot entailment model and dataset, The test accuracy of the off-the-shelf model to its accuracy after 2 iterations of self-training. RoBERTa, DeBERTa, and BART correspond to the following models from Hugging Face Hub: roberta-large-mnli, deberta-large-mnli-zero-cls, and bart-large-mnli.}
-    \label{tab:zero_shot}
-\end{table}
-
-For each model BART, DeBERTa, and RoBERTa we report the baseline accuracy of the off-the-shelf zero-shot model, followed by its performance after two iterations of self-training. Consistent with the findings of \citet{gera_zero-shot_2022}, self-training substantially improves zero-shot classification performance across AG and ISEAR datasets, yielding gains of up to \textbf{12\%}. However, the effect varies when applied to the ClimateTV dataset.
-
-\begin{itemize}
-    \item BART shows a notable improvement on the ClimateTV dataset, increasing accuracy from \textbf{25.25\% to 34.34\%} after self-training.
-    \item DeBERTa, which already performs significantly better than the other models on ClimateTV, does not benefit from self-training, maintaining an accuracy of \textbf{46.46\%}.
-    \item RoBERTa, similar to DeBERTa, shows no performance gain on the ClimateTV dataset, with self-training yielding identical results.
-\end{itemize}
-
-These observations suggest that while self-training generally enhances zero-shot performance, its effectiveness may depend on the dataset characteristics. In particular, the ClimateTV dataset appears to present challenges that self-training does not overcome for DeBERTa and RoBERTa.
-
-
-\subsection{Loss Re-weighting}
-
-To evaluate the impact of fine-tuning with loss re-weighting, we compare the model's performance on the manually annotated dataset before and after training. Table \ref{tab:per_class} provides per-class accuracy comparisons. Additionally, the classification reports in Table \ref{tab:classification_report} present a detailed breakdown of precision, recall, and F1-score for each emotion class.
+The CardiffNLP RoBERTa-large model produced the largest number of high-confidence predictions, although its overall precision at these high-confidence levels was slightly lower than that of BART-large-MNLI and DeBERTa-v3-large-Zeroshot. In contrast, DeBERTa-v3-large-Zeroshot had fewer total high-confidence predictions, indicating that it was more conservative in assigning high confidence but achieved a higher precision among those it did classify confidently. 
 \newline
 
-\begin{table}[ht]
-    \centering
-    \begin{tabular}{lcc}
-        \hline
-        \textbf{Emotion Class} & \textbf{Baseline Accuracy} & \textbf{After Training Accuracy} \\
-        \hline
-        Anger & 0.6667 & 0.7576 \\
-        Disgust & 0.4000 & 0.2667 \\
-        Fear & 0.3077 & 0.3077 \\
-        Joy & 0.8750 & 0.8750 \\
-        Sadness & 0.0833 & 0.0833 \\
-        Surprise & 0.3000 & 0.5000 \\
-        \hline
-    \end{tabular}
-    \caption{Per-class accuracy comparison.}
-    \label{tab:per_class}
-\end{table}
+Based on both primary and secondary evaluation metrics outlined in Section \ref{subsec:eval}, the CardiffNLP RoBERTa-large model demonstrates the highest overall performance, making it the most effective model.
 
-\begin{table}[ht]
-    \centering
-    \begin{tabular}{lccc|ccc}
-        \hline
-        \multirow{2}{*}{\textbf{Class}} & \multicolumn{3}{c|}{\textbf{Baseline}} & \multicolumn{3}{c}{\textbf{After Training}} \\
-        & Precision & Recall & F1-score & Precision & Recall & F1-score \\
-        \hline
-        Anger & 0.76 & 0.67 & 0.71 & 0.71 & 0.76 & 0.74 \\
-        Disgust & 0.27 & 0.40 & 0.32 & 0.27 & 0.27 & 0.27 \\
-        Fear & 0.57 & 0.31 & 0.40 & 0.50 & 0.31 & 0.38 \\
-        Joy & 0.48 & 0.88 & 0.62 & 0.54 & 0.88 & 0.67 \\
-        Sadness & 0.50 & 0.08 & 0.14 & 0.50 & 0.08 & 0.14 \\
-        Surprise & 0.30 & 0.30 & 0.30 & 0.38 & 0.50 & 0.43 \\
-        \hline
-        \textbf{Accuracy} & \multicolumn{3}{c|}{0.5051} & \multicolumn{3}{c}{0.5354} \\
-        \hline
-    \end{tabular}
-    \caption{Classification report comparison before and after training.}
-    \label{tab:classification_report}
-\end{table}
-
-The results indicate a slight overall accuracy improvement of \textbf{3.03\%} after training. The per-class accuracy shows that "anger" and "surprise" saw the most significant improvements, while "disgust" slightly degraded. The confidence scores on average decreased by 0.0552, suggesting that while the model made some better predictions, it became slightly less confident overall. The classification report highlights improved F1-scores for anger, joy, and surprise, while other classes remained stable.
-
-
-\section{Text-Based Results}
+\section{Fine-Tuning with Soft Labels}
+\subsection{Text-Based Results}
 \label{sec:text-results}
 
 Table~\ref{tab:comparison} summarizes the results for our best text-based experiment, showing significant improvements across all metrics.
@@ -156,7 +84,7 @@ Table~\ref{tab:comparison} summarizes the results for our best text-based experi
         \toprule
         \multirow{2}{*}{Metric} & \multicolumn{3}{c|}{Our Model} & \multicolumn{3}{c}{Baseline} \\
         \cmidrule(lr){2-4} \cmidrule(lr){5-7}
-        & August & February & Combined & August & February & Combined \\
+        & August & February & Average Score & August & February & Average Score \\
         \midrule
         Cosine Similarity $\uparrow$ & 0.8094 & 0.7962 & \textbf{0.8028} & 0.6919 & 0.6830 & \textbf{0.6903} \\
         KL Divergence $\downarrow$   & 0.3473 & 0.3483 & \textbf{0.3478} & 0.8254 & 0.8909 & \textbf{0.8376} \\
@@ -164,11 +92,11 @@ Table~\ref{tab:comparison} summarizes the results for our best text-based experi
         \bottomrule
     \end{tabular}%
     }
-    \caption{Performance comparison between Baseline and Our Model. The Baseline is the \textbf{CardiffNLP RoBERTa-Large}, which is used in a zero-shot setting. Higher values are better for $\uparrow$, and lower values are better for $\downarrow$. Bold values indicate combined scores.}
+    \caption{Performance comparison between Baseline and Our Model. The Baseline is the CardiffNLP RoBERTa-Large. Higher values are better for $\uparrow$, and lower values are better for $\downarrow$. Bold values indicate averaged scores.}
     \label{tab:comparison}
 \end{table}
 
-Our model achieves a combined Cosine Similarity score of 0.8028, a \textbf{16.3\%} improvement over the Baseline ($\Delta = +0.1125$). Month-wise improvements are +17.0\% (August) and +16.6\% (February), showing stable performance over time.
+Our model achieves an average Cosine Similarity score of 0.8028, a \textbf{16.3\%} improvement over the Baseline ($\Delta = +0.1125$). Month-wise improvements are +17.0\% (August) and +16.6\% (February), showing stable performance over time.
 \newline
 
 For KL Divergence, our model reduces distributional mismatch by \textbf{58.5\%} ($\Delta = 0.4898$), with the highest reduction in February (60.9\%). This indicates better probability distribution calibration.
@@ -177,10 +105,11 @@ For KL Divergence, our model reduces distributional mismatch by \textbf{58.5\%} 
 The MSE results show a \textbf{43.4\%} reduction in error ($\Delta = 0.0178$), with consistent improvements of 43.6\% (August) and 44.1\% (February), confirming robust generalization.
 
 
-\section{Image-Based Results}
+\subsection{Image-Based Results}
 \label{sec:image-results}
 
 Table~\ref{tab:comparison_img} presents the results for our best image-based experiment.
+\newline
 
 \begin{table}[ht]
     \centering
@@ -189,7 +118,7 @@ Table~\ref{tab:comparison_img} presents the results for our best image-based exp
         \toprule
         \multirow{2}{*}{Metric} & \multicolumn{3}{c|}{Our Model} & \multicolumn{3}{c}{Baseline} \\
         \cmidrule(lr){2-4} \cmidrule(lr){5-7}
-        & August & February & Combined & August & February & Combined \\
+        & August & February & Average Score & August & February & Average Score \\
         \midrule
         Cosine Similarity $\uparrow$ & 0.8105 & 0.7887 & \textbf{0.7996} & 0.5017 & 0.5529 & \textbf{0.5113} \\
         KL Divergence $\downarrow$ & 0.3555 & 0.3611 & \textbf{0.3583} & 1.3696 & 0.9196 & \textbf{1.2859} \\
@@ -197,23 +126,24 @@ Table~\ref{tab:comparison_img} presents the results for our best image-based exp
         \bottomrule
     \end{tabular}%
     }
-    \caption{Performance comparison between Baseline and Our Model for image-based experiments. The Baseline model is \textbf{CLIP ViT-L/14}, applied without fine-tuning. Higher values are better for $\uparrow$, and lower values are better for $\downarrow$. Bold values indicate combined scores.}
+    \caption{Performance comparison between Baseline and Our Model for image-based experiments. The Baseline model is CLIP ViT-L/14, applied without fine-tuning. Higher values are better for $\uparrow$, and lower values are better for $\downarrow$. Bold values indicate averaged scores.}
     \label{tab:comparison_img}
 \end{table}
 
-Our model achieves a combined Cosine Similarity of 0.7996, a \textbf{56.4\%} improvement over the Baseline ($\Delta = +0.2883$), with month-wise improvements of 61.5\% (August) and 42.6\% (February).
+Our model achieves an average Cosine Similarity of 0.7996, a \textbf{56.4\%} improvement over the Baseline ($\Delta = +0.2883$), with month-wise improvements of 61.5\% (August) and 42.6\% (February).
 \newline
 
 For KL Divergence, our model reduces distributional mismatch by \textbf{72.2\%} ($\Delta = 0.9276$), with a 74.0\% reduction in August.
 \newline
 
-The MSE results show a \textbf{64.2\%} reduction in error ($\Delta = 0.0426$), with reductions of 65.4\% (August) and 58.8\% (February). Fine-tuning the CLIP encoder was crucial, as aggressive tuning without regularization led to overfitting.
+The MSE results show a \textbf{64.2\%} reduction in error ($\Delta = 0.0426$), with reductions of 65.4\% (August) and 58.8\% (February).
 
 % -------------------------------------------------------
-\section{Multimodal Results}
+\subsection{Multimodal Results}
 \label{sec:multimodal-results}
 
 Table~\ref{tab:comparison_multi} summarizes results for our best multimodal experiment.
+\newline
 
 \begin{table}[ht]
     \centering
@@ -222,7 +152,7 @@ Table~\ref{tab:comparison_multi} summarizes results for our best multimodal expe
         \toprule
         \multirow{2}{*}{Metric} & \multicolumn{3}{c|}{Our Model} & \multicolumn{3}{c}{Baseline} \\
         \cmidrule(lr){2-4} \cmidrule(lr){5-7}
-        & August & February & Combined & August & February & Combined \\
+        & August & February & Average Score & August & February & Average Score \\
         \midrule
         Cosine Similarity $\uparrow$ & 0.8263 & 0.7989 & \textbf{0.8127} & 0.7090 & 0.7233 & \textbf{0.7117} \\
         KL Divergence $\downarrow$   & 0.3314 & 0.3411 & \textbf{0.3362} & 0.6118 & 0.5311 & \textbf{0.5968} \\
@@ -230,11 +160,11 @@ Table~\ref{tab:comparison_multi} summarizes results for our best multimodal expe
         \bottomrule
     \end{tabular}%
     }
-    \caption{Performance comparison between Baseline and Our Model for multimodal experiments. The Baseline predictions are obtained by averaging the outputs from the two unimodal Baseline models. Higher values are better for $\uparrow$, and lower values are better for $\downarrow$. Bold values indicate combined scores.}
+    \caption{Performance comparison between Baseline and Our Model for multimodal experiments. The Baseline predictions are obtained by averaging the outputs from the two unimodal Baseline models. Higher values are better for $\uparrow$, and lower values are better for $\downarrow$. Bold values indicate averaged scores.}
     \label{tab:comparison_multi}
 \end{table}
 
-Our model achieves a combined Cosine Similarity of 0.8127, outperforming the Baseline by \textbf{14.4\%} ($\Delta = +0.1010$). Month-wise improvements show a 16.6\% gain in August and a 10.5\% gain in February, demonstrating stability across different time frames. 
+Our model achieves an average Cosine Similarity of 0.8127, outperforming the Baseline by \textbf{14.4\%} ($\Delta = +0.1010$). Month-wise improvements show a 16.6\% gain in August and a 10.5\% gain in February, demonstrating stability across different time frames. 
 \newline
 
 The KL Divergence reduction of \textbf{44.0\%} ($\Delta = 0.2605$) reflects a substantial enhancement in probability distribution alignment. The largest reduction occurs in August (45.8\%), closely followed by February (35.8\%), reinforcing the model's robustness in learning more calibrated probability distributions.
@@ -249,9 +179,13 @@ For MSE, our model achieves a \textbf{35.7\%} reduction ($\Delta = 0.0124$), red
 All experiment configurations described in Section~\ref{sec:Experimental Setup} (e.g., hyperparameters, tuning strategies, and architectures) were identically repeated for both datasets (August and February) and for each of the two random seeds (42 and 7). 
 This setup ensures that any observed performance differences can be attributed primarily to dataset-specific factors or random initialization, rather than differences in training procedures.
 
-\subsection{Comparison Across Datasets}
-\label{subsec:results_datasets}
-Table~\ref{tab:dataset_comparison} presents aggregated metrics for all experiments for each modality (averaged over the two seeds) on the August vs.\ February data. We observe that models perform better on August data across text-only, image-only, and multimodal settings, likely due to the larger volume of available data during this period. This aligns with prior research on climate change discourse on social media, which suggests that August sees heightened engagement and an increase in visually rich content related to climate activism and extreme weather events \cite{mooseder_social_2023}.
+\subsection{Comparision Across Datasets}
+\label{subsec:results_datasets} 
+
+Table~\ref{tab:dataset_comparison} presents aggregated metrics for all experiments for each modality (averaged over the two seeds) on the August vs.\ February data. We observe that models perform significantly better on August data across all modalities, likely due to the larger volume of available data (4.3x more than February). The increased data availability improves model generalization and stabilizes predictions, leading to higher Cosine Similarity and lower error-based metrics (MSE, KL Divergence).
+\newline
+
+Prior research suggests that climate change discourse on social media follows a cyclical pattern, with engagement spiking around major focusing events such as COP conferences, climate protests, and extreme weather events. However, the higher data availability in August does not necessarily indicate heightened engagement but rather a larger presence of climate-related content overall, possibly due to greater discussion of summer weather patterns and environmental conditions. \citet{mooseder_social_2023}
 
 \begin{table}[ht]
     \centering
@@ -275,18 +209,16 @@ Table~\ref{tab:dataset_comparison} presents aggregated metrics for all experimen
     \label{tab:dataset_comparison}
 \end{table}
 
-\paragraph{Observations:}
-\begin{itemize}
-    \item \textbf{Performance Differences Across Modalities:} Across all modalities, August data consistently leads to higher Cosine Similarity scores and lower error-based metrics (MSE, KL Divergence). This suggests that discussions during this period exhibit stronger semantic consistency and clearer sentiment expression, possibly due to the prominence of visually impactful events such as environmental protests and disasters \cite{mooseder_social_2023}. 
-    \item \textbf{Seasonal Variations in Climate Change Discourse:} February discourse tends to center around scientific reports and policy discussions, which are often more technical and nuanced, potentially leading to greater variability in sentiment expression. In contrast, August discussions are more action-driven, dominated by activism and real-time extreme weather reporting, resulting in a more emotionally consistent signal \cite{mooseder_social_2023}. 
-    \item \textbf{Influence of Automated and Polarizing Content:} Prior research indicates that automated social media accounts (bots) have a stronger presence in August, amplifying both climate activism and skepticism. This heightened polarization likely contributes to increased engagement and a larger volume of available data, which in turn supports better model performance \cite{mooseder_social_2023}.
-    \item \textbf{Stable Ordering:} In both datasets, multimodal models outperform text-only, which in turn outperform image-only.
-    \item \textbf{Statistical Significance:} We performed an independent samples t-test comparing performance on August vs.\ February data. 
-    \begin{itemize}
-    \item \textbf{Cosine Similarity:} August data shows significantly higher values ($t = 34.52$, $p < 0.0001$).
-    \item \textbf{MSE:} August data exhibits significantly lower values ($t = -12.49$, $p < 0.0001$).
-    \item \textbf{KL Divergence:} August data also demonstrates significantly lower values ($t = -10.40$, $p < 0.0001$).
-    \end{itemize}
+\paragraph{Observations:} 
+\begin{itemize} 
+    \item \textbf{Impact of Data Volume on Model Performance:} Across all modalities, August data consistently leads to higher Cosine Similarity scores and lower error-based metrics (MSE, KL Divergence). The 4.3x larger dataset size provides models with a richer and more diverse representation of climate discourse, allowing for better generalization. 
+    \item \textbf{Seasonal Trends in Climate Change Discourse:} While engagement on climate change tends to peak in the late months of the year (October–December) due to global climate summits and activism, August appears to have a larger overall volume of discussions. This may be driven by extreme weather reporting, environmental tourism, and increased discussions around summer climate anomalies. 
+    \item \textbf{Stable Ordering Across Modalities:} In both datasets, multimodal models outperform text-only models, which in turn outperform image-only models, reinforcing the importance of leveraging both textual and visual cues. 
+    \item \textbf{Statistical Significance:} An independent samples t-test comparing performance on August vs.\ February data confirms significant differences: \begin{itemize} 
+        \item \textbf{Cosine Similarity:} August data shows significantly higher values ($t = 34.52$, $p < 0.0001$), likely due to greater data availability stabilizing predictions. 
+        \item \textbf{MSE:} August data exhibits significantly lower values ($t = -12.49$, $p < 0.0001$), suggesting lower variability in sentiment expression due to more consistent discussions. 
+        \item \textbf{KL Divergence:} August data also demonstrates significantly lower values ($t = -10.40$, $p < 0.0001$), indicating better model certainty in predictions. 
+    \end{itemize} 
 \end{itemize}
 
 
@@ -329,9 +261,9 @@ To understand how initialization affects outcomes, each configuration was also t
 In summary, training on August vs.\ February data produces larger, statistically significant performance differences than using different seeds. Although we only used two seeds, the minimal performance gap between them suggests that our primary findings are not unduly affected by random initialization.
 
 
-\section{Comparative Analysis: Performance Metrics, Model Configurations, and Hyperparameter Impact}
+\section{Comparative Analysis}
 
-This section provides a unified view of performance across text, image, and multimodal models. We begin with an overview of top and bottom performers (Table~\ref{tab:performance}), followed by detailed insights into the role of hyperparameters in each modality. 
+This section provides a unified view of performance across text, image, and multimodal models. The analysis begins with an overview of top and bottom performers (Table~\ref{tab:performance}), followed by detailed insights into the role of hyperparameters in each modality. 
 
 
 \subsection{Overall Performance Across Modalities}
@@ -344,7 +276,7 @@ Table~\ref{tab:performance} summarizes the highest and lowest performers, reveal
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccccccc}
         \toprule
-        \textbf{Model} & \textbf{Score} & \textbf{CosineSim} & \textbf{KLDiv} & \textbf{MSE} & \textbf{LR} & \textbf{Dropout} & \textbf{Epochs} & \textbf{Key Features} \\
+        \textbf{Model} & \textbf{Ranking-Score} & \textbf{CosineSim} & \textbf{KLDiv} & \textbf{MSE} & \textbf{LR} & \textbf{Dropout} & \textbf{Epochs} & \textbf{Key Features} \\
         \midrule
         \multicolumn{9}{c}{\textbf{Top Performers (Multimodal)}} \\
         \midrule
@@ -379,10 +311,7 @@ Table~\ref{tab:performance} summarizes the highest and lowest performers, reveal
 
 \begin{itemize}
     \item \textbf{Multimodal Superiority (on Average)}
-    The top multimodal models achieve higher cosine similarity scores (0.811, 0.812, and 0.813) compared to the bottom single-modality models (0.760 for text-only and 0.788 for image-only). However, the top-performing single-modality models (RoBERTa-Large text-only: 0.802 and CLIP image-only: 0.799) actually overlap with or slightly exceed the lower range of multimodal models (0.768 and 0.771 for the bottom multimodal models). This suggests that not all multimodal configurations are superior, and poor multimodal fusion strategies (e.g., inappropriate freezing/tuning combinations) can reduce performance below strong single-modality baselines. Despite this, the best multimodal models still consistently outperform their best single-modality counterparts, reinforcing the benefit of using both text and image data when optimized properly.
-
-    \item \textbf{Balanced Regularization}
-    The top multimodal models use moderate learning rates (1e-5 or 5e-6) and dropout values of 0.3 to 0.5. These settings achieve a strong balance between model capacity and generalization, leading to lower KL divergence and MSE. In contrast, the bottom multimodal models, with similar architectures but higher KL divergence and MSE, suggest that variations in regularization strategies (e.g., different freezing settings) impact performance.
+    The top multimodal models achieve higher cosine similarity scores (0.811, 0.812, and 0.813) compared to the bottom single-modality models (0.760 for text-only and 0.788 for image-only). However, the top-performing single-modality models (RoBERTa-Large text-only: 0.802 and CLIP image-only: 0.799) are not far off from the top multimodal configurations. This suggests that not all multimodal configurations are superior, and poor multimodal fusion strategies (e.g., inappropriate freezing/tuning combinations) can reduce performance below strong single-modality baselines. Despite this, the best multimodal models still consistently outperform their best single-modality counterparts, reinforcing the benefit of using both text and image data when optimized properly.
 
     \item \textbf{Efficient Convergence}
     Multimodal models converge in 2–5 epochs while still achieving top-tier performance. The single-modality text-only model that remains frozen and trains for 10 epochs performs well (cosine similarity = 0.802). However, when fine-tuned for 10 epochs, the text-only model's cosine similarity drops to 0.760, a decrease of over 5\%. A similar trend is observed in image-only models, where longer training and fewer frozen layers lead to slight but notable drops in performance. This indicates that careful selection of epoch count and freezing/tuning strategies is particularly important for single-modality setups.
@@ -395,13 +324,14 @@ Table~\ref{tab:performance} summarizes the highest and lowest performers, reveal
 \label{subsec:text-hparams}
 
 Experiments on text-only RoBERTa models reveal critical hyperparameter interactions:
+\newline
 
 \begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llccccccc}
         \toprule
-        Tuning & Optimizer & Learning Rate & Epochs & Dropout & CosineSim $\uparrow$ & KLDiv $\downarrow$ & MSE $\downarrow$ & Score $\uparrow$ \\
+        Tuning & Optimizer & Learning Rate & Epochs & Dropout & CosineSim $\uparrow$ & KLDiv $\downarrow$ & MSE $\downarrow$ & Ranking-Score $\uparrow$ \\
         \midrule
         \multirow{6}{*}{Frozen} & \multirow{6}{*}{Adam} & $1\text{e-}5$ & 10 & 0.3 & \textbf{0.8028} & \textbf{0.3478} & \textbf{0.0232} & \textbf{2.4318} \\
          &  & $5\text{e-}6$ & 10 & 0.3 & 0.8015 & 0.3498 & 0.0233 & 2.4285 \\
@@ -422,6 +352,8 @@ Experiments on text-only RoBERTa models reveal critical hyperparameter interacti
 
 
 \noindent \textbf{Key Trends from Table~\ref{tab:text-hparam-breakdown}}:
+\newline
+
 \begin{itemize}
     \item \textbf{Freezing Encoders}: Frozen models outperform tuned counterparts by 3.7\% in score (2.4318 vs. 2.3455). Stability in pre-trained representations prevents overfitting, especially with longer training (10 epochs).
     \item \textbf{Learning Rate Sensitivity}: Optimal performance occurs at lr=1e-5 for frozen models. Lower rates (5e-6) require fewer epochs to match performance.
@@ -432,13 +364,14 @@ Experiments on text-only RoBERTa models reveal critical hyperparameter interacti
 \label{subsec:image-hparams}
 
 Image-only CLIP models exhibit distinct hyperparameter dynamics compared to text:
+\newline
 
 \begin{table}[ht]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llccccccc}
         \toprule
-        Tuning & Optimizer & Learning Rate & Epochs & Dropout & CosineSim $\uparrow$ & KLDiv $\downarrow$ & MSE $\downarrow$ & Score $\uparrow$ \\
+        Tuning & Optimizer & Learning Rate & Epochs & Dropout & CosineSim $\uparrow$ & KLDiv $\downarrow$ & MSE $\downarrow$ & Ranking-Score $\uparrow$ \\
         \midrule
         \multirow{6}{*}{Tuned} & \multirow{5}{*}{Adam} & $5\text{e-}6$ & 2  & 0.5 & \textbf{0.7996} & \textbf{0.3583} & \textbf{0.0238} & \textbf{2.4174} \\
          &  & $5\text{e-}6$ & 2  & 0.3 & 0.7990 & 0.3591 & 0.0240 & 2.4159 \\
@@ -463,6 +396,8 @@ Image-only CLIP models exhibit distinct hyperparameter dynamics compared to text
 
 
 \noindent \textbf{Key Trends from Table~\ref{tab:image-hparam-breakdown}}:
+\newline
+
 \begin{itemize}
     \item \textbf{Tuned Efficiency}: Short training (2 epochs) with lr=5e-6 and dropout=0.5 yields peak performance (2.4174). Extending to 10 epochs reduces scores by 3.4\%.
     \item \textbf{Frozen Flexibility}: Frozen models achieve comparable scores (2.4173) but require higher learning rates (1e-5) and extended training (10 epochs).
@@ -473,6 +408,7 @@ Image-only CLIP models exhibit distinct hyperparameter dynamics compared to text
 \label{subsec:multimodal-hparams}
 
 Multimodal configurations demonstrate synergistic benefits from modality fusion:
+\newline
 
 \begin{table}[ht]
 \centering
@@ -485,7 +421,7 @@ Multimodal configurations demonstrate synergistic benefits from modality fusion:
 \multirow{8}{*}{\textbf{RoBERTa-large \& CLIP}}  
     & \multirow{6}{*}{AdamW}  
         & $1\text{e-}5$  & 0.5 & 5 & 3-Layer MLP & Both frozen & \textbf{0.8126} \\
-    &   & $1\text{e-}5$  & 0.5 & 5 & GELU / 3-Layer MLP & Both frozen & 0.8114 \\
+    &   & $1\text{e-}5$  & 0.5 & 5 & GELU \& 3-Layer MLP & Both frozen & 0.8114 \\
     &   & $1\text{e-}5$  & 0.5 & 5 & - & Tuned & 0.8085 \\
     &   & $5\text{e-}6$  & 0.5 & 2 & - & Tuned & 0.8085 \\
     &   & $5\text{e-}5$  & 0.5 & 5 & Residual fusion & - & 0.7858 \\
@@ -498,8 +434,8 @@ Multimodal configurations demonstrate synergistic benefits from modality fusion:
 \multirow{7}{*}{\textbf{RoBERTa-base \& CLIP}}  
     & \multirow{4}{*}{AdamW}  
         & $1\text{e-}5$  & 0.5 & 5 & - & Tuned & 0.7679 \\
-    &   & $1\text{e-}5$  & 0.5 & 5 & GELU / 3-Layer MLP & Tuned & 0.7725 \\
-    &   & $5\text{e-}6$  & 0.3 & 2 & GELU / 3-Layer MLP & Tuned & \textbf{0.8115} \\
+    &   & $1\text{e-}5$  & 0.5 & 5 & GELU \& 3-Layer MLP & Tuned & 0.7725 \\
+    &   & $5\text{e-}6$  & 0.3 & 2 & GELU \& 3-Layer MLP & Tuned & \textbf{0.8115} \\
     &   & $5\text{e-}6$  & 0.5 & 5 & - & Both frozen & 0.8070 \\
     \cmidrule{2-8}
     & \multirow{3}{*}{Adam}  
@@ -515,6 +451,8 @@ Multimodal configurations demonstrate synergistic benefits from modality fusion:
 
 
 \noindent \textbf{Key Trends from Table~\ref{tab:multi-hparam-breakdown}}:
+\newline
+
 \begin{itemize}
     \item \textbf{Freezing Efficacy}: Fully frozen RoBERTa-Large and CLIP achieve the highest cosine similarity score (0.8126), emphasizing the value of preserving pre-trained features. Partial tuning (e.g., RoBERTa-Base with GELU) narrows the gap to 0.13\% (0.8126 vs. 0.8115).
     \item \textbf{Architectural Adaptability}: RoBERTa-Base competes with RoBERTa-Large when paired with GELU activations and tuned layers, despite 55\% fewer parameters.
@@ -556,18 +494,18 @@ Overall, the findings emphasize that well-structured multimodal models, particul
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/plot_1.png}
-        \caption{MSE: Text model vs.\ baseline}
+        \caption{MSE: Our Text Model vs.\ Baseline}
         \label{fig:mse-text}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/plot_2.png}
-        \caption{MSE: Image model vs.\ baseline}
+        \caption{MSE: Our Image Model vs.\ Baseline}
         \label{fig:mse-img}
     \end{subfigure}
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{images/plot_3.png}
-        \caption{MSE: Multimodal model vs.\ baseline}
+        \caption{MSE: Our Multimodal Model vs.\ Baseline}
         \label{fig:mse-multi}
     \end{subfigure}
     \caption{Emotion-wise comparison of Mean Squared Error (MSE) across models and baselines. Emotion order - Anger, Fear, Surprise, Disgust, Sadness, Joy. Lower is better.}
@@ -670,8 +608,9 @@ In summary, while distribution-level metrics show progress, real-use scenarios r
 
 
 \section{Qualitative Analysis}
+\label{sec:qualitative}
 
-In this section, we present a detailed qualitative analysis of our emotion distribution predictions. Alongside each tweet snippet, its aggregated distribution of replies (the soft label), and our model predictions, we also show samples of individual reply predictions. This provides insight into how each user response contributes to the final averaged (aggregated) target distribution and how the model might struggle or excel in capturing these varied emotional signals.
+In this section, a detailed qualitative analysis of predicted emotion distributions is presented. Alongside each tweet snippet, its aggregated distribution of replies (the soft label), and model predictions, the samples of individual replies are also shown. This provides insight into how the model might struggle or excel in capturing these varied emotional signals.
 
 \vspace{1em}
 \subsection*{Poor Performance Cases}
@@ -732,7 +671,7 @@ Since only one user replied, the aggregated distribution essentially mirrors tha
 it turns out that fires broke out in entire countries in sub-Saharan Africa...''}
 \end{quote}
 
-Despite this clear emotional focus (with nearly half the probability mass on fear), the model’s final (multimodal) prediction spread its probabilities more evenly, assigning:
+Despite this clear emotional focus (with nearly half the probability mass on fear), our multimodal model’s final prediction spread its probabilities more evenly, assigning:
 
 \begin{itemize}
     \item \textit{Fear:} 27.0\% (vs.\ 48.8\% in replies),
@@ -849,7 +788,7 @@ of what it was 20 years ago. \#climatechange \#climatecrisis \#dataviz
 \end{aligned}
 \]
 
-In total, there were \textit{several distinct replies}, reflecting a wide range of sentiments. Some expressed concern (\textit{fear, sadness}), others surprise or disgust at the data, while certain replies maintained an optimistic or grateful tone (joy):
+In total, there were several distinct replies, reflecting a wide range of sentiments. Some expressed concern (fear, sadness), others surprise or disgust at the data, while certain replies maintained an optimistic or grateful tone (joy):
 
 \begin{quote}
 \emph{``Great work—even if it highlights a worrying trend,''} \\
@@ -918,7 +857,7 @@ Hence, in cases of \textbf{diverse or high-entropy user replies}, the model exce
 \vspace{1em}
 \subsubsection*{Illustration of Noisy or Poorly Written Replies}
 
-While many replies are coherent, we also observed \emph{poorly written} or difficult-to-parse responses. Such messages can introduce errors or unusual probability spikes when aggregated. For instance, consider a few actual examples from our dataset (unedited):
+While many replies are coherent, we also observed poorly written or difficult-to-parse responses. Such messages can introduce errors or unusual probability spikes when aggregated. For instance, consider a few actual examples from our dataset (unedited):
 
 \begin{quote}
 \emph{``BASIL AMAELO????''} \\
@@ -949,13 +888,97 @@ Additionally, the training objective plays a crucial role in shaping the model�
 While sarcasm, slang, or ambiguous imagery can contribute to misclassifications, these factors were not the primary drivers of errors. Instead, \textbf{the shape of reply distributions and the model's training objective exerted a stronger influence}, as confirmed by both numerical trends and qualitative inspection of user responses.
 
 
+\section{Weakly Supervised Learning Results}
+\subsection{Zero-Shot Classification Boost with Self-training}
 
-\section{Conclusion}
+We replicate the study conducted by \cite{gera_zero-shot_2022}, which investigates the impact of self-training on zero-shot entailment models. Table~\ref{tab:zero_shot} presents the accuracy results on three datasets: AG \cite{DBLP:journals/corr/ZhangZL15}, ISEAR \cite{Shao2015UniversalityVC}, and ClimateTV. The first two datasets, AG and ISEAR, were originally used in the reference study, while we extend the evaluation to ClimateTV dataset.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{lccc}
+        \toprule
+        Model & AG  & ISEAR & ClimateTV \\
+        \midrule
+        BART & 66.2 & 56.0 & \textbf{25.25} \\
+        +Self-training & 74.2 & 65.3 & \textbf{34.34} \\
+        \midrule
+        DeBERTa & 73.2 & 58.5 & \textbf{46.46} \\
+        +Self-training & 81.4 & 59.5 & \textbf{46.46} \\
+        \midrule
+        RoBERTa & 62.4 & 52.0 & \textbf{32.32} \\
+        +Self-training & 76.5 & 56.7 & \textbf{32.32} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Zero-Shot classification accuracy of entailment models. For each zero-shot entailment model and dataset, The test accuracy of the off-the-shelf model to its accuracy after 2 iterations of self-training. RoBERTa, DeBERTa, and BART correspond to the following models from Hugging Face Hub: roberta-large-mnli, deberta-large-mnli-zero-cls, and bart-large-mnli.}
+    \label{tab:zero_shot}
+\end{table}
+
+For each model BART, DeBERTa, and RoBERTa we report the baseline accuracy of the off-the-shelf zero-shot model, followed by its performance after two iterations of self-training. Consistent with the findings of \citet{gera_zero-shot_2022}, self-training substantially improves zero-shot classification performance across AG and ISEAR datasets, yielding gains of up to \textbf{12\%}. However, the effect varies when applied to the ClimateTV dataset.
+
+\begin{itemize}
+    \item BART shows a notable improvement on the ClimateTV dataset, increasing accuracy from \textbf{25.25\% to 34.34\%} after self-training.
+    \item DeBERTa, which already performs significantly better than the other models on ClimateTV, does not benefit from self-training, maintaining an accuracy of \textbf{46.46\%}.
+    \item RoBERTa, similar to DeBERTa, shows no performance gain on the ClimateTV dataset, with self-training yielding identical results.
+\end{itemize}
+
+These observations suggest that while self-training generally enhances zero-shot performance, its effectiveness may depend on the dataset characteristics. In particular, the ClimateTV dataset appears to present challenges that self-training does not overcome for DeBERTa and RoBERTa.
+
+
+\subsection{Loss Re-weighting}
+
+To evaluate the impact of fine-tuning with loss re-weighting, we compare the model's performance on the manually annotated dataset before and after training. Table \ref{tab:per_class} provides per-class accuracy comparisons. Additionally, the classification reports in Table \ref{tab:classification_report} present a detailed breakdown of precision, recall, and F1-score for each emotion class.
+\newline
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{lcc}
+        \hline
+        \textbf{Emotion Class} & \textbf{Baseline Accuracy} & \textbf{After Training Accuracy} \\
+        \hline
+        Anger & 0.6667 & 0.7576 \\
+        Disgust & 0.4000 & 0.2667 \\
+        Fear & 0.3077 & 0.3077 \\
+        Joy & 0.8750 & 0.8750 \\
+        Sadness & 0.0833 & 0.0833 \\
+        Surprise & 0.3000 & 0.5000 \\
+        \hline
+    \end{tabular}
+    \caption{Per-class accuracy comparison.}
+    \label{tab:per_class}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{lccc|ccc}
+        \hline
+        \multirow{2}{*}{\textbf{Class}} & \multicolumn{3}{c|}{\textbf{Baseline}} & \multicolumn{3}{c}{\textbf{After Training}} \\
+        & Precision & Recall & F1-score & Precision & Recall & F1-score \\
+        \hline
+        Anger & 0.76 & 0.67 & 0.71 & 0.71 & 0.76 & 0.74 \\
+        Disgust & 0.27 & 0.40 & 0.32 & 0.27 & 0.27 & 0.27 \\
+        Fear & 0.57 & 0.31 & 0.40 & 0.50 & 0.31 & 0.38 \\
+        Joy & 0.48 & 0.88 & 0.62 & 0.54 & 0.88 & 0.67 \\
+        Sadness & 0.50 & 0.08 & 0.14 & 0.50 & 0.08 & 0.14 \\
+        Surprise & 0.30 & 0.30 & 0.30 & 0.38 & 0.50 & 0.43 \\
+        \hline
+        \textbf{Accuracy} & \multicolumn{3}{c|}{0.5051} & \multicolumn{3}{c}{0.5354} \\
+        \hline
+    \end{tabular}
+    \caption{Classification report comparison before and after training.}
+    \label{tab:classification_report}
+\end{table}
+
+The results indicate a slight overall accuracy improvement of \textbf{3.03\%} after training. The per-class accuracy shows that anger and surprise saw the most significant improvements, while disgust slightly degraded. The confidence scores on average decreased by 0.0552, suggesting that while the model made some better predictions, it became slightly less confident overall. The classification report highlights improved F1-scores for anger, joy, and surprise, while other classes remained stable.
+
+
+
+\section{Summary}
 \label{sec:conclusion}
 
 Fine-tuning provides marked improvements over zero-shot classification for both text and image modalities, significantly reducing KL divergence and increasing cosine similarity scores. The additional benefits from multimodal fusion confirm that integrating visual and textual information can yield more robust representations.
+\newline
 
-However, these gains also highlight emerging challenges—such as minority label collapse and over-reliance on dominant emotional categories—that warrant deeper exploration. In the next chapter, we delve into a comprehensive analysis of these issues, examining the interplay between distribution-level metrics and instance-level accuracy, as well as the broader implications for real-world emotion classification tasks.
+However, these gains also highlight emerging challenges, such as minority label collapse and over-reliance on dominant emotional categories, that warrant deeper exploration. In the next chapter, we delve into a comprehensive discussion of these issues, examining the interplay between distribution-level metrics and instance-level accuracy, as well as the broader implications for real-world emotion classification tasks.
 
 
 
